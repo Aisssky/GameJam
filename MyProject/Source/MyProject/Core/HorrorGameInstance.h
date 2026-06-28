@@ -18,6 +18,8 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGameLoaded, const FString&, SlotN
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnNarrativeFlagSet, FName, FlagName);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnGameCompleted);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnWakeUp);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnEnemyShot, AActor*, EnemyActor, float, StunDuration);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTalismanPlacedOnDoor, AActor*, DoorActor);
 
 // 新增：存档成功/失败/拒绝，用于自动保存提示和按钮红亮+禁止音效。
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGameSaved, const FString&, SlotName);
@@ -124,6 +126,12 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Event Dispatchers")
 	FOnWakeUp OnWakeUp;
+
+	UPROPERTY(BlueprintAssignable, Category = "Event Dispatchers")
+	FOnEnemyShot OnEnemyShot;
+
+	UPROPERTY(BlueprintAssignable, Category = "Event Dispatchers")
+	FOnTalismanPlacedOnDoor OnTalismanPlacedOnDoor;
 
 	// =========================
 	// 存档系统新增事件

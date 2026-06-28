@@ -1,16 +1,19 @@
 #include "HorrorPlayerController.h"
 #include "PlayerCharacterB.h"
 #include "../Core/HorrorGameInstance.h"
+#include "../UI/HorrorUIComponent.h"
+#include "../Weapon/HorrorAbilitySystemComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
-#include "Blueprint/UserWidget.h"
 #include "Engine/World.h"
 #include "GameFramework/GameModeBase.h"
 
 AHorrorPlayerController::AHorrorPlayerController()
 {
 	CurrentSubState = EGameSubState::SUBSTATE_NORMAL;
+
+	UIComponent = CreateDefaultSubobject<UHorrorUIComponent>(TEXT("UIComponent"));
 }
 
 void AHorrorPlayerController::BeginPlay()
@@ -60,8 +63,17 @@ void AHorrorPlayerController::OnLayerStateChanged(ELayerState From, ELayerState 
 {
 	ClearAllInputContexts();
 
-	HideHUD();
-	HideConsoleUI();
+	const bool bFromMovementBlocked = (From == ELayerState::STATE_CONSOLE_ACTIVE || From == ELayerState::STATE_INNER_GAMEPLAY);
+	const bool bToMovementBlocked   = (To   == ELayerState::STATE_CONSOLE_ACTIVE || To   == ELayerState::STATE_INNER_GAMEPLAY);
+
+	if (!bFromMovementBlocked && bToMovementBlocked)
+	{
+		DisablePlayerMovement();
+	}
+	else if (bFromMovementBlocked && !bToMovementBlocked)
+	{
+		EnablePlayerMovement();
+	}
 
 	switch (To)
 	{
@@ -75,25 +87,16 @@ void AHorrorPlayerController::OnLayerStateChanged(ELayerState From, ELayerState 
 		PushInputContext(IMC_Gameplay, 3);
 		SetShowMouseCursor(false);
 		SetInputMode(FInputModeGameOnly());
-		EnablePlayerMovement();
-		if (CurrentSubState == EGameSubState::SUBSTATE_NORMAL)
-		{
-			ShowHUD();
-		}
 		break;
 
 	case ELayerState::STATE_CONSOLE_ACTIVE:
 		PushInputContext(IMC_ConsoleUI, 2);
-		DisablePlayerMovement();
 		SetShowMouseCursor(true);
 		SetInputMode(FInputModeGameAndUI());
-		ShowConsoleUI();
 		break;
 
 	case ELayerState::STATE_INNER_GAMEPLAY:
 		PushInputContext(IMC_ConsoleUI, 2);
-		DisablePlayerMovement();
-		ShowConsoleUI();
 		break;
 
 	case ELayerState::STATE_CINEMATIC:
@@ -153,29 +156,45 @@ bool AHorrorPlayerController::SetSubState(EGameSubState NewState)
 		break;
 	}
 
+	if (UIComponent)
+	{
+		UIComponent->SetSubStateBlocked(CurrentSubState != EGameSubState::SUBSTATE_NORMAL);
+	}
+
+	if (CachedPlayerCharacter && CachedPlayerCharacter->AbilitySystemComponent)
+	{
+		const bool bMenuBlocked = (CurrentSubState != EGameSubState::SUBSTATE_NORMAL);
+		CachedPlayerCharacter->AbilitySystemComponent->SetMenuBlocked(bMenuBlocked);
+	}
+
 	return true;
 }
 
 void AHorrorPlayerController::EnterMenuState()
 {
-	SetSubState(EGameSubState::SUBSTATE_MENU);
 	PushInputContext(IMC_Menu, 1);
 	GetWorldSettings()->SetTimeDilation(0.0f);
 	SetShowMouseCursor(true);
-	HideHUD();
-	ShowPauseMenu();
+
+	if (UIComponent)
+	{
+		UIComponent->ShowPauseMenu();
+	}
 }
 
 void AHorrorPlayerController::ExitMenuState()
 {
-	HidePauseMenu();
-	PopPanel();
+	if (UIComponent)
+	{
+		UIComponent->HidePauseMenu();
+		UIComponent->PopPanel();
+	}
+
 	ClearAllInputContexts();
 	PushInputContext(IMC_Gameplay, 3);
 	GetWorldSettings()->SetTimeDilation(1.0f);
 	SetShowMouseCursor(false);
 	SetSubState(EGameSubState::SUBSTATE_NORMAL);
-	ShowHUD();
 }
 
 void AHorrorPlayerController::OnToggleConsole(const FInputActionValue& Value)
@@ -207,6 +226,10 @@ void AHorrorPlayerController::OnToggleConsole(const FInputActionValue& Value)
 	{
 		CachedPlayerCharacter->ConsoleComponent->PutAway();
 	}
+	else if (Current == ELayerState::STATE_INNER_GAMEPLAY)
+	{
+		CachedGameInstance->TransitionToLayer(ELayerState::STATE_CONSOLE_ACTIVE);
+	}
 }
 
 void AHorrorPlayerController::OnMenuPressed(const FInputActionValue& Value)
@@ -219,34 +242,6 @@ void AHorrorPlayerController::OnMenuPressed(const FInputActionValue& Value)
 	{
 		EnterMenuState();
 	}
-}
-
-void AHorrorPlayerController::PushPanel(TSubclassOf<UUserWidget> WidgetClass)
-{
-	if (!WidgetClass) return;
-
-	UUserWidget* Widget = CreateWidget<UUserWidget>(this, WidgetClass);
-	if (Widget)
-	{
-		Widget->AddToViewport();
-		PanelStack.Add(Widget);
-	}
-}
-
-void AHorrorPlayerController::PopPanel()
-{
-	if (PanelStack.Num() == 0) return;
-
-	UUserWidget* Top = PanelStack.Pop();
-	if (Top)
-	{
-		Top->RemoveFromParent();
-	}
-}
-
-UUserWidget* AHorrorPlayerController::GetTopPanel() const
-{
-	return PanelStack.Num() > 0 ? PanelStack.Last() : nullptr;
 }
 
 void AHorrorPlayerController::DisablePlayerMovement()
@@ -270,68 +265,5 @@ void AHorrorPlayerController::EnablePlayerMovement()
 	if (CachedPlayerCharacter)
 	{
 		CachedPlayerCharacter->EnableMovement();
-	}
-}
-
-void AHorrorPlayerController::ShowHUD()
-{
-	if (!WBP_HUDClass) return;
-	if (!HUDInstance)
-	{
-		HUDInstance = CreateWidget<UUserWidget>(this, WBP_HUDClass);
-	}
-	if (HUDInstance && !HUDInstance->IsInViewport())
-	{
-		HUDInstance->AddToViewport();
-	}
-}
-
-void AHorrorPlayerController::HideHUD()
-{
-	if (HUDInstance && HUDInstance->IsInViewport())
-	{
-		HUDInstance->RemoveFromParent();
-	}
-}
-
-void AHorrorPlayerController::ShowPauseMenu()
-{
-	if (!WBP_PauseMenuClass) return;
-	if (!PauseMenuInstance)
-	{
-		PauseMenuInstance = CreateWidget<UUserWidget>(this, WBP_PauseMenuClass);
-	}
-	if (PauseMenuInstance && !PauseMenuInstance->IsInViewport())
-	{
-		PauseMenuInstance->AddToViewport();
-	}
-}
-
-void AHorrorPlayerController::HidePauseMenu()
-{
-	if (PauseMenuInstance && PauseMenuInstance->IsInViewport())
-	{
-		PauseMenuInstance->RemoveFromParent();
-	}
-}
-
-void AHorrorPlayerController::ShowConsoleUI()
-{
-	if (!WBP_ConsoleUIClass) return;
-	if (!ConsoleUIInstance)
-	{
-		ConsoleUIInstance = CreateWidget<UUserWidget>(this, WBP_ConsoleUIClass);
-	}
-	if (ConsoleUIInstance && !ConsoleUIInstance->IsInViewport())
-	{
-		ConsoleUIInstance->AddToViewport();
-	}
-}
-
-void AHorrorPlayerController::HideConsoleUI()
-{
-	if (ConsoleUIInstance && ConsoleUIInstance->IsInViewport())
-	{
-		ConsoleUIInstance->RemoveFromParent();
 	}
 }

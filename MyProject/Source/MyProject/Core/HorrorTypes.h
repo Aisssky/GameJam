@@ -39,3 +39,4 @@ enum class EEnemyAIState : uint8
 	Chasing        UMETA(DisplayName = "Chasing"),
 	Stalking       UMETA(DisplayName = "Stalking"),
 };
+

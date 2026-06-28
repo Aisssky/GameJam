@@ -2,19 +2,24 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "AbilitySystemInterface.h"
 #include "../Console/ConsoleComponent.h"
 #include "PlayerCharacterB.generated.h"
 
 class UCameraComponent;
 class UCharacterMovementComponent;
+class UHorrorAbilitySystemComponent;
+class UInputAction;
 
 UCLASS()
-class MYPROJECT_API APlayerCharacterB : public ACharacter
+class MYPROJECT_API APlayerCharacterB : public ACharacter, public IAbilitySystemInterface
 {
 	GENERATED_BODY()
 
 public:
 	APlayerCharacterB();
+
+	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
 protected:
 	virtual void BeginPlay() override;
@@ -58,13 +63,24 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Console")
 	TObjectPtr<UConsoleComponent> ConsoleComponent;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
-	TObjectPtr<class UInputAction> IA_Move;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
+	TObjectPtr<UHorrorAbilitySystemComponent> AbilitySystemComponent;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
-	TObjectPtr<class UInputAction> IA_Look;
+	TObjectPtr<UInputAction> IA_Move;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
+	TObjectPtr<UInputAction> IA_Look;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
+	TObjectPtr<UInputAction> IA_ToggleGun;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
+	TObjectPtr<UInputAction> IA_ToggleTalisman;
 
 protected:
 	void OnMove(const struct FInputActionValue& Value);
 	void OnLook(const struct FInputActionValue& Value);
+	void OnToggleGunInput(const struct FInputActionValue& Value);
+	void OnToggleTalismanInput(const struct FInputActionValue& Value);
 };

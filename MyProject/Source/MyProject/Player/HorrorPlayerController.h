@@ -10,6 +10,7 @@ class UInputAction;
 class UUserWidget;
 class UHorrorGameInstance;
 class APlayerCharacterB;
+class UHorrorUIComponent;
 
 UCLASS()
 class MYPROJECT_API AHorrorPlayerController : public APlayerController
@@ -45,29 +46,14 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
 	TObjectPtr<UInputAction> IA_Menu;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI")
-	TSubclassOf<UUserWidget> WBP_HUDClass;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI")
-	TSubclassOf<UUserWidget> WBP_PauseMenuClass;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI")
-	TSubclassOf<UUserWidget> WBP_ConsoleUIClass;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
+	TObjectPtr<UHorrorUIComponent> UIComponent;
 
 	UFUNCTION(BlueprintPure, Category = "Sub State")
 	EGameSubState GetSubState() const { return CurrentSubState; }
 
 	UFUNCTION(BlueprintCallable, Category = "Sub State")
 	bool SetSubState(EGameSubState NewState);
-
-	UFUNCTION(BlueprintCallable, Category = "UI")
-	void PushPanel(TSubclassOf<UUserWidget> WidgetClass);
-
-	UFUNCTION(BlueprintCallable, Category = "UI")
-	void PopPanel();
-
-	UFUNCTION(BlueprintPure, Category = "UI")
-	UUserWidget* GetTopPanel() const;
 
 	UFUNCTION(BlueprintCallable, Category = "Movement")
 	void DisablePlayerMovement();
@@ -80,19 +66,7 @@ protected:
 	EGameSubState CurrentSubState;
 
 	UPROPERTY()
-	TArray<TObjectPtr<UUserWidget>> PanelStack;
-
-	UPROPERTY()
 	TObjectPtr<UHorrorGameInstance> CachedGameInstance;
-
-	UPROPERTY()
-	TObjectPtr<UUserWidget> HUDInstance;
-
-	UPROPERTY()
-	TObjectPtr<UUserWidget> PauseMenuInstance;
-
-	UPROPERTY()
-	TObjectPtr<UUserWidget> ConsoleUIInstance;
 
 	void OnToggleConsole(const struct FInputActionValue& Value);
 	void OnMenuPressed(const struct FInputActionValue& Value);
@@ -102,13 +76,6 @@ protected:
 
 	void EnterMenuState();
 	void ExitMenuState();
-
-	void ShowHUD();
-	void HideHUD();
-	void ShowPauseMenu();
-	void HidePauseMenu();
-	void ShowConsoleUI();
-	void HideConsoleUI();
 
 private:
 	UPROPERTY()

@@ -1,5 +1,6 @@
 #include "PlayerCharacterB.h"
 #include "../Console/ConsoleComponent.h"
+#include "../Weapon/HorrorAbilitySystemComponent.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "EnhancedInputComponent.h"
@@ -14,6 +15,7 @@ APlayerCharacterB::APlayerCharacterB()
 	FirstPersonCamera->bUsePawnControlRotation = true;
 
 	ConsoleComponent = CreateDefaultSubobject<UConsoleComponent>(TEXT("ConsoleComponent"));
+	AbilitySystemComponent = CreateDefaultSubobject<UHorrorAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
 
 	bUseControllerRotationYaw = true;
 
@@ -23,6 +25,11 @@ APlayerCharacterB::APlayerCharacterB()
 		MoveComp->MaxAcceleration = 2048.0f;
 		MoveComp->bOrientRotationToMovement = false;
 	}
+}
+
+UAbilitySystemComponent* APlayerCharacterB::GetAbilitySystemComponent() const
+{
+	return AbilitySystemComponent;
 }
 
 void APlayerCharacterB::BeginPlay()
@@ -54,6 +61,19 @@ void APlayerCharacterB::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		{
 			EnhancedInput->BindAction(IA_Look, ETriggerEvent::Triggered, this, &APlayerCharacterB::OnLook);
 		}
+		if (IA_ToggleGun)
+		{
+			EnhancedInput->BindAction(IA_ToggleGun, ETriggerEvent::Triggered, this, &APlayerCharacterB::OnToggleGunInput);
+		}
+		if (IA_ToggleTalisman)
+		{
+			EnhancedInput->BindAction(IA_ToggleTalisman, ETriggerEvent::Triggered, this, &APlayerCharacterB::OnToggleTalismanInput);
+		}
+
+		if (AbilitySystemComponent)
+		{
+			AbilitySystemComponent->SetupWeaponInput(EnhancedInput);
+		}
 	}
 }
 
@@ -76,6 +96,22 @@ void APlayerCharacterB::OnLook(const FInputActionValue& Value)
 	{
 		AddControllerYawInput(LookVector.X * MouseSensitivity);
 		AddControllerPitchInput(LookVector.Y * MouseSensitivity);
+	}
+}
+
+void APlayerCharacterB::OnToggleGunInput(const FInputActionValue& Value)
+{
+	if (AbilitySystemComponent)
+	{
+		AbilitySystemComponent->ToggleGun();
+	}
+}
+
+void APlayerCharacterB::OnToggleTalismanInput(const FInputActionValue& Value)
+{
+	if (AbilitySystemComponent)
+	{
+		AbilitySystemComponent->ToggleTalisman();
 	}
 }
 

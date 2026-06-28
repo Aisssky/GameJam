@@ -16,6 +16,9 @@ public class MyProject : ModuleRules
 			"AIModule",
 			"NavigationSystem",
 			"UMG",
+			"GameplayAbilities",
+			"GameplayTags",
+			"GameplayTasks",
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[]
