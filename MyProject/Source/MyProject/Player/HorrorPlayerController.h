@@ -45,6 +45,15 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
 	TObjectPtr<UInputAction> IA_Menu;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI")
+	TSubclassOf<UUserWidget> WBP_HUDClass;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI")
+	TSubclassOf<UUserWidget> WBP_PauseMenuClass;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI")
+	TSubclassOf<UUserWidget> WBP_ConsoleUIClass;
+
 	UFUNCTION(BlueprintPure, Category = "Sub State")
 	EGameSubState GetSubState() const { return CurrentSubState; }
 
@@ -76,6 +85,15 @@ protected:
 	UPROPERTY()
 	TObjectPtr<UHorrorGameInstance> CachedGameInstance;
 
+	UPROPERTY()
+	TObjectPtr<UUserWidget> HUDInstance;
+
+	UPROPERTY()
+	TObjectPtr<UUserWidget> PauseMenuInstance;
+
+	UPROPERTY()
+	TObjectPtr<UUserWidget> ConsoleUIInstance;
+
 	void OnToggleConsole(const struct FInputActionValue& Value);
 	void OnMenuPressed(const struct FInputActionValue& Value);
 
@@ -84,6 +102,13 @@ protected:
 
 	void EnterMenuState();
 	void ExitMenuState();
+
+	void ShowHUD();
+	void HideHUD();
+	void ShowPauseMenu();
+	void HidePauseMenu();
+	void ShowConsoleUI();
+	void HideConsoleUI();
 
 private:
 	UPROPERTY()
