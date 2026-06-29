@@ -25,6 +25,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTalismanPlacedOnDoor, AActor*, Do
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGameSaved, const FString&, SlotName);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSaveFailed, const FString&, SlotName);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSaveOperationDenied, FText, Reason);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnSimpleDispatcherL4);
 
 /**
  * 存档槽 UI 状态。
@@ -126,6 +127,12 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Event Dispatchers")
 	FOnWakeUp OnWakeUp;
+
+	UPROPERTY(BlueprintAssignable, Category = "Event Dispatchers")
+	FOnSimpleDispatcherL4 OnInnerGameStarted;
+
+	UPROPERTY(BlueprintAssignable, Category = "Event Dispatchers")
+	FOnSimpleDispatcherL4 OnInnerGameEnded;
 
 	UPROPERTY(BlueprintAssignable, Category = "Event Dispatchers")
 	FOnEnemyShot OnEnemyShot;

@@ -30,6 +30,9 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI|Classes")
 	TSubclassOf<UUserWidget> WBP_ConsoleUIClass;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI|Classes")
+	TSubclassOf<UUserWidget> WBP_InnerGameplayHUDClass;
+
 	UFUNCTION(BlueprintCallable, Category = "UI|Panel")
 	void PushPanel(TSubclassOf<UUserWidget> WidgetClass);
 
@@ -53,6 +56,8 @@ protected:
 	void HideHUD();
 	void ShowConsoleUI();
 	void HideConsoleUI();
+	void ShowInnerGameplayHUD();
+	void HideInnerGameplayHUD();
 	void HideAll();
 
 	void RefreshUIForCurrentState();
@@ -68,6 +73,9 @@ protected:
 
 	UPROPERTY()
 	TObjectPtr<UUserWidget> ConsoleUIInstance;
+
+	UPROPERTY()
+	TObjectPtr<UUserWidget> InnerGameplayHUDInstance;
 
 	UPROPERTY()
 	TArray<TObjectPtr<UUserWidget>> PanelStack;

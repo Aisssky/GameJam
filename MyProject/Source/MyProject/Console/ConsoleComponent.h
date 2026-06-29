@@ -53,6 +53,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Console")
 	void ForcePutAway();
 
+	UFUNCTION(BlueprintCallable, Category = "Console")
+	void EnterInnerGameplay();
+
+	UFUNCTION(BlueprintCallable, Category = "Console")
+	void ExitInnerGameplay();
+
 	UFUNCTION(BlueprintPure, Category = "Console")
 	bool IsConsoleActive() const { return CurrentState == EConsoleState::Active; }
 

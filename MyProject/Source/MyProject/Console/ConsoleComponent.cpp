@@ -156,6 +156,24 @@ void UConsoleComponent::TickAnimProgress(float DeltaTime, bool bIsTakingOut)
 	}
 }
 
+void UConsoleComponent::EnterInnerGameplay()
+{
+	if (CurrentState != EConsoleState::Active) return;
+
+	if (CachedGameInstance && CachedGameInstance->CurrentLayerState == ELayerState::STATE_CONSOLE_ACTIVE)
+	{
+		CachedGameInstance->TransitionToLayer(ELayerState::STATE_INNER_GAMEPLAY);
+	}
+}
+
+void UConsoleComponent::ExitInnerGameplay()
+{
+	if (CachedGameInstance && CachedGameInstance->CurrentLayerState == ELayerState::STATE_INNER_GAMEPLAY)
+	{
+		CachedGameInstance->TransitionToLayer(ELayerState::STATE_CONSOLE_ACTIVE);
+	}
+}
+
 void UConsoleComponent::OnGameInstanceLayerChanged(ELayerState From, ELayerState To)
 {
 	if (To == ELayerState::STATE_OUTER_GAMEPLAY && CurrentState == EConsoleState::Active)

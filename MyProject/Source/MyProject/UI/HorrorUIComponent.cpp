@@ -60,8 +60,12 @@ void UHorrorUIComponent::RefreshUIForCurrentState()
 		break;
 
 	case ELayerState::STATE_CONSOLE_ACTIVE:
+		ShowConsoleUI();
+		break;
+
 	case ELayerState::STATE_INNER_GAMEPLAY:
 		ShowConsoleUI();
+		ShowInnerGameplayHUD();
 		break;
 
 	default:
@@ -74,6 +78,7 @@ void UHorrorUIComponent::HideAll()
 	HideHUD();
 	HidePauseMenu();
 	HideConsoleUI();
+	HideInnerGameplayHUD();
 }
 
 void UHorrorUIComponent::ShowHUD()
@@ -136,6 +141,27 @@ void UHorrorUIComponent::HideConsoleUI()
 	if (ConsoleUIInstance && ConsoleUIInstance->IsInViewport())
 	{
 		ConsoleUIInstance->RemoveFromParent();
+	}
+}
+
+void UHorrorUIComponent::ShowInnerGameplayHUD()
+{
+	if (!WBP_InnerGameplayHUDClass) return;
+	if (!InnerGameplayHUDInstance)
+	{
+		InnerGameplayHUDInstance = CreateWidget<UUserWidget>(GetWorld(), WBP_InnerGameplayHUDClass);
+	}
+	if (InnerGameplayHUDInstance && !InnerGameplayHUDInstance->IsInViewport())
+	{
+		InnerGameplayHUDInstance->AddToViewport();
+	}
+}
+
+void UHorrorUIComponent::HideInnerGameplayHUD()
+{
+	if (InnerGameplayHUDInstance && InnerGameplayHUDInstance->IsInViewport())
+	{
+		InnerGameplayHUDInstance->RemoveFromParent();
 	}
 }
 

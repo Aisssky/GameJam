@@ -97,6 +97,7 @@ void AHorrorPlayerController::OnLayerStateChanged(ELayerState From, ELayerState 
 
 	case ELayerState::STATE_INNER_GAMEPLAY:
 		PushInputContext(IMC_ConsoleUI, 2);
+		SetShowMouseCursor(false);
 		break;
 
 	case ELayerState::STATE_CINEMATIC:

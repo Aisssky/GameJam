@@ -103,6 +103,16 @@ bool UHorrorGameInstance::TransitionToLayer(ELayerState TargetLayer)
 
 	OnLayerChanged.Broadcast(OldState, TargetLayer);
 
+	// L4 进入/退出事件
+	if (TargetLayer == ELayerState::STATE_INNER_GAMEPLAY)
+	{
+		OnInnerGameStarted.Broadcast();
+	}
+	else if (OldState == ELayerState::STATE_INNER_GAMEPLAY)
+	{
+		OnInnerGameEnded.Broadcast();
+	}
+
 	return true;
 }
 
