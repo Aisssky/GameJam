@@ -8,7 +8,6 @@
 class UHorrorGameInstance;
 class ASceneCapture2D;
 class USceneCaptureComponent2D;
-class ULevelStreamingDynamic;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnL4LifecycleEvent);
 
@@ -84,9 +83,6 @@ protected:
 	UFUNCTION()
 	void OnLayerChangedCallback(ELayerState From, ELayerState To);
 
-	UFUNCTION()
-	void OnL4LevelLoadComplete();
-
 private:
 	UPROPERTY()
 	TObjectPtr<UHorrorGameInstance> CachedGameInstance;
@@ -96,4 +92,5 @@ private:
 
 	void SetupSceneCapture();
 	void ClearSceneCapture();
+	void EnsureSceneCaptureCached();
 };

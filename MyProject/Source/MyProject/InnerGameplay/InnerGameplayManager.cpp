@@ -4,10 +4,9 @@
 #include "Engine/SceneCapture2D.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "Engine/TextureRenderTarget2D.h"
-#include "Kismet/GameplayStatics.h"
 #include "Engine/World.h"
 #include "Engine/LevelStreaming.h"
-#include "Engine/LevelStreamingDynamic.h"
+#include "Misc/PackageName.h"
 #include "EngineUtils.h"
 
 AInnerGameplayManager::AInnerGameplayManager()
@@ -92,37 +91,22 @@ void AInnerGameplayManager::StartInnerGame()
 {
 	if (bIsL4Active) return;
 
-	UE_LOG(LogTemp, Log, TEXT("[InnerGameplayManager] StartInnerGame - loading '%s'"), *L4LevelName.ToString());
+	UE_LOG(LogTemp, Log, TEXT("[InnerGameplayManager] StartInnerGame - level '%s' already preloaded"), *L4LevelName.ToString());
 
 	OnL4Started.Broadcast();
 
-	FLatentActionInfo LatentInfo;
-	LatentInfo.CallbackTarget = this;
-	LatentInfo.ExecutionFunction = TEXT("OnL4LevelLoadComplete");
-	LatentInfo.Linkage = 0;
-	LatentInfo.UUID = FMath::Rand();
+	EnsureSceneCaptureCached();
+	SetupSceneCapture();
 
-	UGameplayStatics::LoadStreamLevel(this, L4LevelName, true, false, LatentInfo);
+	OnL4LevelLoaded.Broadcast();
 
 	bIsL4Active = true;
 }
 
-void AInnerGameplayManager::OnL4LevelLoadComplete()
+void AInnerGameplayManager::EnsureSceneCaptureCached()
 {
-	UE_LOG(LogTemp, Log, TEXT("[InnerGameplayManager] L4 level loaded - looking for SceneCapture named '%s'"), *SceneCaptureActorName.ToString());
-
-	SetupSceneCapture();
-
-	OnL4LevelLoaded.Broadcast();
-}
-
-void AInnerGameplayManager::SetupSceneCapture()
-{
-	ClearSceneCapture();
-
-	if (!RenderTarget)
+	if (CachedSceneCapture && IsValid(CachedSceneCapture))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[InnerGameplayManager] RenderTarget is null - SceneCapture won't render anywhere. Assign a RenderTarget2D asset in the editor."));
 		return;
 	}
 
@@ -131,74 +115,55 @@ void AInnerGameplayManager::SetupSceneCapture()
 		ASceneCapture2D* Capture = *It;
 		if (Capture && Capture->GetFName() == SceneCaptureActorName)
 		{
-			USceneCaptureComponent2D* CaptureComp = Capture->GetCaptureComponent2D();
-			if (CaptureComp)
-			{
-				CaptureComp->TextureTarget = RenderTarget;
-				CaptureComp->bCaptureEveryFrame = true;
-				CaptureComp->bCaptureOnMovement = false;
-
-				if (bShowOnlyL4Actors)
-				{
-					CaptureComp->PrimitiveRenderMode = ESceneCapturePrimitiveRenderMode::PRM_UseShowOnlyList;
-					CaptureComp->ShowOnlyActors.Reset();
-
-					for (ULevelStreaming* StreamingLevel : GetWorld()->GetStreamingLevels())
-					{
-						if (StreamingLevel && StreamingLevel->GetWorldAssetPackageFName() == L4LevelName)
-						{
-							if (ULevel* LoadedLevel = StreamingLevel->GetLoadedLevel())
-							{
-								for (AActor* Actor : LoadedLevel->Actors)
-								{
-									if (IsValid(Actor) && Actor != Capture)
-									{
-										CaptureComp->ShowOnlyActors.Add(Actor);
-									}
-								}
-								UE_LOG(LogTemp, Log, TEXT("[InnerGameplayManager] ShowOnlyList: %d actors from level '%s'"),
-									CaptureComp->ShowOnlyActors.Num(), *L4LevelName.ToString());
-							}
-							break;
-						}
-					}
-				}
-
-				CachedSceneCapture = Capture;
-
-				UE_LOG(LogTemp, Log, TEXT("[InnerGameplayManager] SceneCapture '%s' bound to RenderTarget '%s'"),
-					*Capture->GetName(), *RenderTarget->GetName());
-				return;
-			}
+			CachedSceneCapture = Capture;
+			UE_LOG(LogTemp, Log, TEXT("[InnerGameplayManager] Cached SceneCapture '%s'"), *Capture->GetName());
+			return;
 		}
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("[InnerGameplayManager] No ASceneCapture2D named '%s' found in loaded levels. Did you place one in %s?"),
-		*SceneCaptureActorName.ToString(), *L4LevelName.ToString());
+	UE_LOG(LogTemp, Warning, TEXT("[InnerGameplayManager] EnsureSceneCaptureCached: No SceneCapture2D named '%s' found!"),
+		*SceneCaptureActorName.ToString());
+}
+
+void AInnerGameplayManager::SetupSceneCapture()
+{
+	EnsureSceneCaptureCached();
+
+	if (!RenderTarget)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[InnerGameplayManager] RenderTarget is null"));
+		return;
+	}
+
+	if (!CachedSceneCapture)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[InnerGameplayManager] No cached SceneCapture, can't setup"));
+		return;
+	}
+
+	USceneCaptureComponent2D* CaptureComp = CachedSceneCapture->GetCaptureComponent2D();
+	if (CaptureComp)
+	{
+		CaptureComp->TextureTarget = RenderTarget;
+		CaptureComp->bCaptureEveryFrame = true;
+		UE_LOG(LogTemp, Log, TEXT("[InnerGameplayManager] SetupSceneCapture: bound RenderTarget '%s'"),
+			*RenderTarget->GetName());
+	}
 }
 
 void AInnerGameplayManager::ClearSceneCapture()
 {
-	if (CachedSceneCapture)
-	{
-		if (USceneCaptureComponent2D* Comp = CachedSceneCapture->GetCaptureComponent2D())
-		{
-			Comp->TextureTarget = nullptr;
-		}
-		CachedSceneCapture = nullptr;
-	}
+	// SceneCapture config (PrimitiveRenderMode, ShowOnlyActors, TextureTarget)
+	// is preserved so the console screen keeps showing L_AGameplay during L3.
 }
 
 void AInnerGameplayManager::EndInnerGame()
 {
 	if (!bIsL4Active) return;
 
-	UE_LOG(LogTemp, Log, TEXT("[InnerGameplayManager] EndInnerGame - unloading '%s'"), *L4LevelName.ToString());
+	UE_LOG(LogTemp, Log, TEXT("[InnerGameplayManager] EndInnerGame - keeping '%s' loaded for warm-up"), *L4LevelName.ToString());
 
 	ClearSceneCapture();
-
-	FLatentActionInfo LatentInfo;
-	UGameplayStatics::UnloadStreamLevel(this, L4LevelName, LatentInfo, false);
 
 	bIsL4Active = false;
 

@@ -68,6 +68,10 @@ void UHorrorUIComponent::RefreshUIForCurrentState()
 		ShowInnerGameplayHUD();
 		break;
 
+	case ELayerState::STATE_MAIN_MENU:
+		ShowMainMenu();
+		break;
+
 	default:
 		break;
 	}
@@ -79,6 +83,7 @@ void UHorrorUIComponent::HideAll()
 	HidePauseMenu();
 	HideConsoleUI();
 	HideInnerGameplayHUD();
+	HideMainMenu();
 }
 
 void UHorrorUIComponent::ShowHUD()
@@ -162,6 +167,27 @@ void UHorrorUIComponent::HideInnerGameplayHUD()
 	if (InnerGameplayHUDInstance && InnerGameplayHUDInstance->IsInViewport())
 	{
 		InnerGameplayHUDInstance->RemoveFromParent();
+	}
+}
+
+void UHorrorUIComponent::ShowMainMenu()
+{
+	if (!WBP_MainMenuClass) return;
+	if (!MainMenuInstance)
+	{
+		MainMenuInstance = CreateWidget<UUserWidget>(GetWorld(), WBP_MainMenuClass);
+	}
+	if (MainMenuInstance && !MainMenuInstance->IsInViewport())
+	{
+		MainMenuInstance->AddToViewport();
+	}
+}
+
+void UHorrorUIComponent::HideMainMenu()
+{
+	if (MainMenuInstance && MainMenuInstance->IsInViewport())
+	{
+		MainMenuInstance->RemoveFromParent();
 	}
 }
 

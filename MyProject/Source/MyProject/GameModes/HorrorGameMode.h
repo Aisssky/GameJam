@@ -4,6 +4,8 @@
 #include "GameFramework/GameModeBase.h"
 #include "HorrorGameMode.generated.h"
 
+class ULevelStreaming;
+
 UCLASS()
 class MYPROJECT_API AHorrorGameMode : public AGameModeBase
 {
@@ -38,4 +40,14 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Streaming")
 	FName ConsoleStreamingLevelName = TEXT("L_AGameplay");
+
+protected:
+	void HideConsoleLevelActors();
+	void SetupConsoleSceneCapture();
+
+	UFUNCTION()
+	void OnConsoleLevelLoaded();
+
+	UPROPERTY()
+	TObjectPtr<ULevelStreaming> CachedConsoleStreamingLevel;
 };
