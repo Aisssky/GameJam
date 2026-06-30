@@ -22,7 +22,7 @@ UMetaHorrorSaveGame::UMetaHorrorSaveGame()
 void UMetaHorrorSaveGame::InitAsPlayerSave(const FTransform& InitialPlayerTransform)
 {
 	SlotName = TEXT("PlayerSave");
-	DisplayName = TEXT("你的存档");
+	DisplayName = TEXT("新建存档");
 	bIsPreExistingSave = false;
 	bCanBeDeleted = true;
 	bCanBeRead = true;

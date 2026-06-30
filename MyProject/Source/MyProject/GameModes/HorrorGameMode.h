@@ -22,6 +22,8 @@ class MYPROJECT_API AMenuGameMode : public AHorrorGameMode
 
 public:
 	AMenuGameMode();
+
+	virtual void BeginPlay() override;
 };
 
 UCLASS()
@@ -33,4 +35,7 @@ public:
 	AOuterGameplayGameMode();
 
 	virtual void BeginPlay() override;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Streaming")
+	FName ConsoleStreamingLevelName = TEXT("L_AGameplay");
 };

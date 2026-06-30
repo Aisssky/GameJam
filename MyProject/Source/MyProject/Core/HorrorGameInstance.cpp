@@ -504,7 +504,7 @@ void UHorrorGameInstance::CaptureRuntimeDataToSave(UMetaHorrorSaveGame* SaveGame
 	}
 
 	SaveGame->SlotName = PlayerSaveSlotName;
-	SaveGame->DisplayName = TEXT("你的存档");
+	SaveGame->DisplayName = TEXT("新建存档");
 	SaveGame->bIsPreExistingSave = false;
 	SaveGame->bCanBeRead = true;
 	SaveGame->bCanBeDeleted = true;
@@ -632,7 +632,7 @@ FMetaHorrorSaveSlotInfo UHorrorGameInstance::BuildSlotInfo(int32 SlotIndex, cons
 	{
 		if (SlotName == PlayerSaveSlotName)
 		{
-			Info.DisplayName = TEXT("空档位");
+			Info.DisplayName = TEXT("新建存档");
 			Info.bCanCreate = true;
 		}
 		else if (HasOriginalSaveBeenReleased())
