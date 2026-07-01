@@ -11,6 +11,7 @@ class UUserWidget;
 class UHorrorGameInstance;
 class APlayerCharacterB;
 class UHorrorUIComponent;
+class AInnerGameCharacter;
 
 UCLASS()
 class MYPROJECT_API AHorrorPlayerController : public APlayerController
@@ -46,6 +47,15 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
 	TObjectPtr<UInputAction> IA_Menu;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input|InnerGame")
+	TObjectPtr<UInputMappingContext> IMC_InnerGameplay;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input|InnerGame")
+	TObjectPtr<UInputAction> IA_InnerMove;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input|InnerGame")
+	TObjectPtr<UInputAction> IA_InnerJump;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
 	TObjectPtr<UHorrorUIComponent> UIComponent;
 
@@ -70,6 +80,8 @@ protected:
 
 	void OnToggleConsole(const struct FInputActionValue& Value);
 	void OnMenuPressed(const struct FInputActionValue& Value);
+	void OnInnerMove(const struct FInputActionValue& Value);
+	void OnInnerJump(const struct FInputActionValue& Value);
 
 	void PushInputContext(UInputMappingContext* Context, int32 Priority);
 	void ClearAllInputContexts();
@@ -80,4 +92,9 @@ protected:
 private:
 	UPROPERTY()
 	TObjectPtr<APlayerCharacterB> CachedPlayerCharacter;
+
+	UPROPERTY()
+	TObjectPtr<AInnerGameCharacter> CachedInnerCharacter;
+
+	void EnsureInnerCharacterCached();
 };
