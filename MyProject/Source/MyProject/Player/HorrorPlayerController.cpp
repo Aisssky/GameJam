@@ -1,5 +1,6 @@
 #include "HorrorPlayerController.h"
 #include "PlayerCharacterB.h"
+#include "../InnerGameplay/InnerGameCharacter.h"
 #include "../Core/HorrorGameInstance.h"
 #include "../UI/HorrorUIComponent.h"
 #include "../Weapon/HorrorAbilitySystemComponent.h"
@@ -8,6 +9,7 @@
 #include "InputActionValue.h"
 #include "Engine/World.h"
 #include "GameFramework/GameModeBase.h"
+#include "EngineUtils.h"
 
 AHorrorPlayerController::AHorrorPlayerController()
 {
@@ -56,6 +58,15 @@ void AHorrorPlayerController::SetupInputComponent()
 		{
 			EnhancedInput->BindAction(IA_Menu, ETriggerEvent::Triggered, this, &AHorrorPlayerController::OnMenuPressed);
 		}
+		if (IA_InnerMove)
+		{
+			EnhancedInput->BindAction(IA_InnerMove, ETriggerEvent::Triggered, this, &AHorrorPlayerController::OnInnerMove);
+		}
+		if (IA_InnerJump)
+		{
+			EnhancedInput->BindAction(IA_InnerJump, ETriggerEvent::Started, this, &AHorrorPlayerController::OnInnerJump);
+			EnhancedInput->BindAction(IA_InnerJump, ETriggerEvent::Completed, this, &AHorrorPlayerController::OnInnerJump);
+		}
 	}
 }
 
@@ -91,12 +102,15 @@ void AHorrorPlayerController::OnLayerStateChanged(ELayerState From, ELayerState 
 
 	case ELayerState::STATE_CONSOLE_ACTIVE:
 		PushInputContext(IMC_ConsoleUI, 2);
+		PushInputContext(IMC_InnerGameplay, 4);
 		SetShowMouseCursor(true);
 		SetInputMode(FInputModeGameAndUI());
 		break;
 
 	case ELayerState::STATE_INNER_GAMEPLAY:
 		PushInputContext(IMC_ConsoleUI, 2);
+		PushInputContext(IMC_InnerGameplay, 4);
+		EnsureInnerCharacterCached();
 		SetShowMouseCursor(false);
 		break;
 
@@ -266,5 +280,81 @@ void AHorrorPlayerController::EnablePlayerMovement()
 	if (CachedPlayerCharacter)
 	{
 		CachedPlayerCharacter->EnableMovement();
+	}
+}
+
+void AHorrorPlayerController::EnsureInnerCharacterCached()
+{
+	if (CachedInnerCharacter && IsValid(CachedInnerCharacter))
+	{
+		return;
+	}
+
+	for (TActorIterator<AInnerGameCharacter> It(GetWorld()); It; ++It)
+	{
+		AInnerGameCharacter* InnerChar = *It;
+		if (IsValid(InnerChar))
+		{
+			CachedInnerCharacter = InnerChar;
+			return;
+		}
+	}
+}
+
+void AHorrorPlayerController::OnInnerMove(const FInputActionValue& Value)
+{
+	EnsureInnerCharacterCached();
+
+	if (!CachedInnerCharacter || !CachedGameInstance)
+	{
+		return;
+	}
+
+	if (CachedGameInstance->CurrentLayerState != ELayerState::STATE_INNER_GAMEPLAY)
+	{
+		return;
+	}
+
+	const float MoveValue = Value.Get<float>();
+	CachedInnerCharacter->MoveForward(MoveValue);
+}
+
+void AHorrorPlayerController::OnInnerJump(const FInputActionValue& Value)
+{
+	if (!CachedGameInstance)
+	{
+		return;
+	}
+
+	const ELayerState Current = CachedGameInstance->CurrentLayerState;
+
+	if (Current == ELayerState::STATE_CONSOLE_ACTIVE)
+	{
+		if (Value.Get<bool>() && CachedPlayerCharacter && CachedPlayerCharacter->ConsoleComponent)
+		{
+			CachedPlayerCharacter->ConsoleComponent->EnterInnerGameplay();
+		}
+		return;
+	}
+
+	// L4: Space makes A jump
+	if (Current != ELayerState::STATE_INNER_GAMEPLAY)
+	{
+		return;
+	}
+
+	EnsureInnerCharacterCached();
+	if (!CachedInnerCharacter)
+	{
+		return;
+	}
+
+	if (Value.Get<bool>())
+	{
+		CachedInnerCharacter->DoJump();
+	}
+	else
+	{
+		CachedInnerCharacter->StopJump();
 	}
 }
