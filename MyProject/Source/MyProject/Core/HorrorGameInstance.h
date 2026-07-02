@@ -161,7 +161,7 @@ public:
 	// =========================
 
 	/** 设置叙事标记；默认会在 PlayerSave 存在时自动保存。 */
-	UFUNCTION(BlueprintCallable, Category = "Narrative")
+	UFUNCTION(BlueprintCallable, Category = "Narrative", meta = (AdvancedDisplay = "bAutoSaveAfterSet"))
 	void SetFlag(FName FlagName, bool bValue = true, bool bAutoSaveAfterSet = true);
 
 	UFUNCTION(BlueprintPure, Category = "Narrative")

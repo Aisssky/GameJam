@@ -7,6 +7,7 @@
 
 class UUserWidget;
 class UHorrorGameInstance;
+class UPauseMenuWidget;
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class MYPROJECT_API UHorrorUIComponent : public UActorComponent
@@ -51,9 +52,24 @@ public:
 	void ShowPauseMenu();
 	void HidePauseMenu();
 
+	UFUNCTION(BlueprintCallable, Category = "UI|Pause Menu")
+	void ShowPauseMenuSavedMessage(float DisplaySeconds);
+
+	UFUNCTION(BlueprintCallable, Category = "UI|Pause Menu")
+	void ShowPauseMenuSaveFailedMessage(const FText& Reason);
+
 protected:
 	UFUNCTION()
 	void OnLayerChangedCallback(ELayerState FromLayer, ELayerState ToLayer);
+
+	UFUNCTION()
+	void HandlePauseMenuSaveClicked();
+
+	UFUNCTION()
+	void HandlePauseMenuReturnMainMenuClicked();
+
+	UFUNCTION()
+	void HandlePauseMenuReturnGameClicked();
 
 	void ShowHUD();
 	void HideHUD();
@@ -66,6 +82,8 @@ protected:
 	void HideAll();
 
 	void RefreshUIForCurrentState();
+	void BindPauseMenuButtons();
+	void SetPauseMenuStatusText(const FText& Message);
 
 	UPROPERTY()
 	TObjectPtr<UHorrorGameInstance> CachedGameInstance;

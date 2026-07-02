@@ -10,12 +10,28 @@
 #include "Engine/World.h"
 #include "GameFramework/GameModeBase.h"
 #include "EngineUtils.h"
+#include "HAL/PlatformTime.h"
+#include "Kismet/GameplayStatics.h"
 
 AHorrorPlayerController::AHorrorPlayerController()
 {
+	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bTickEvenWhenPaused = true;
+
 	CurrentSubState = EGameSubState::SUBSTATE_NORMAL;
 
 	UIComponent = CreateDefaultSubobject<UHorrorUIComponent>(TEXT("UIComponent"));
+}
+
+void AHorrorPlayerController::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+
+	if (bPendingPauseAutoClose && FPlatformTime::Seconds() >= PauseAutoCloseRealtimeSeconds)
+	{
+		bPendingPauseAutoClose = false;
+		ResumeGameFromPause();
+	}
 }
 
 void AHorrorPlayerController::BeginPlay()
@@ -155,9 +171,19 @@ bool AHorrorPlayerController::SetSubState(EGameSubState NewState)
 
 	case EGameSubState::SUBSTATE_MENU:
 		if (Old != EGameSubState::SUBSTATE_NORMAL) return false;
-		EnterMenuState();
 		CurrentSubState = NewState;
-		break;
+		DisablePlayerMovement();
+		bMenuMovementBlocked = (CachedPlayerCharacter != nullptr);
+		if (UIComponent)
+		{
+			UIComponent->SetSubStateBlocked(true);
+		}
+		if (CachedPlayerCharacter && CachedPlayerCharacter->AbilitySystemComponent)
+		{
+			CachedPlayerCharacter->AbilitySystemComponent->SetMenuBlocked(true);
+		}
+		EnterMenuState();
+		return true;
 
 	case EGameSubState::SUBSTATE_INTERACT:
 		if (Old != EGameSubState::SUBSTATE_NORMAL) return false;
@@ -188,8 +214,9 @@ bool AHorrorPlayerController::SetSubState(EGameSubState NewState)
 void AHorrorPlayerController::EnterMenuState()
 {
 	PushInputContext(IMC_Menu, 1);
-	GetWorldSettings()->SetTimeDilation(0.0f);
+	UGameplayStatics::SetGlobalTimeDilation(this, 0.0f);
 	SetShowMouseCursor(true);
+	SetInputMode(FInputModeGameAndUI());
 
 	if (UIComponent)
 	{
@@ -199,6 +226,11 @@ void AHorrorPlayerController::EnterMenuState()
 
 void AHorrorPlayerController::ExitMenuState()
 {
+	CloseMenuState(true);
+}
+
+void AHorrorPlayerController::CloseMenuState(bool bRestoreGameplayInput)
+{
 	if (UIComponent)
 	{
 		UIComponent->HidePauseMenu();
@@ -206,10 +238,88 @@ void AHorrorPlayerController::ExitMenuState()
 	}
 
 	ClearAllInputContexts();
-	PushInputContext(IMC_Gameplay, 3);
-	GetWorldSettings()->SetTimeDilation(1.0f);
+	if (bRestoreGameplayInput)
+	{
+		PushInputContext(IMC_Gameplay, 3);
+		SetInputMode(FInputModeGameOnly());
+	}
+
+	UGameplayStatics::SetGlobalTimeDilation(this, 1.0f);
 	SetShowMouseCursor(false);
+
+	bPendingPauseAutoClose = false;
+	if (bMenuMovementBlocked)
+	{
+		EnablePlayerMovement();
+		bMenuMovementBlocked = false;
+	}
 	SetSubState(EGameSubState::SUBSTATE_NORMAL);
+}
+
+void AHorrorPlayerController::ResumeGameFromPause()
+{
+	ExitMenuState();
+}
+
+bool AHorrorPlayerController::SaveGameFromPause()
+{
+	if (!CachedGameInstance)
+	{
+		CachedGameInstance = Cast<UHorrorGameInstance>(GetGameInstance());
+	}
+
+	if (!CachedGameInstance)
+	{
+		BP_OnPauseMenuSaveFailed(FText::FromString(TEXT("GameInstance 不存在，无法保存。")));
+		return false;
+	}
+
+	const bool bSaved = CachedGameInstance->ManualSaveGame(GetCurrentPlayerActor());
+	if (!bSaved)
+	{
+		BP_OnPauseMenuSaveFailed(FText::FromString(TEXT("保存失败，请确认玩家存档已创建。")));
+		if (UIComponent)
+		{
+			UIComponent->ShowPauseMenuSaveFailedMessage(FText::FromString(TEXT("保存失败")));
+		}
+		return false;
+	}
+
+	if (UIComponent)
+	{
+		UIComponent->ShowPauseMenuSavedMessage(PauseSaveMessageDuration);
+	}
+	BP_OnPauseMenuSaveSucceeded(PauseSaveMessageDuration);
+
+	bPendingPauseAutoClose = true;
+	PauseAutoCloseRealtimeSeconds = FPlatformTime::Seconds() + PauseSaveMessageDuration;
+	return true;
+}
+
+void AHorrorPlayerController::ReturnToMainMenuFromPause()
+{
+	if (!CachedGameInstance)
+	{
+		CachedGameInstance = Cast<UHorrorGameInstance>(GetGameInstance());
+	}
+
+	if (CachedGameInstance)
+	{
+		CachedGameInstance->AutoSaveGame(GetCurrentPlayerActor());
+	}
+
+	BP_OnReturnToMainMenuRequested();
+	CloseMenuState(false);
+
+	if (CachedGameInstance)
+	{
+		CachedGameInstance->TransitionToLayer(ELayerState::STATE_MAIN_MENU);
+	}
+
+	if (!MainMenuLevelName.IsNone())
+	{
+		UGameplayStatics::OpenLevel(this, MainMenuLevelName);
+	}
 }
 
 void AHorrorPlayerController::OnToggleConsole(const FInputActionValue& Value)
@@ -255,7 +365,7 @@ void AHorrorPlayerController::OnMenuPressed(const FInputActionValue& Value)
 	}
 	else if (CurrentSubState == EGameSubState::SUBSTATE_NORMAL)
 	{
-		EnterMenuState();
+		SetSubState(EGameSubState::SUBSTATE_MENU);
 	}
 }
 
@@ -299,6 +409,16 @@ void AHorrorPlayerController::EnsureInnerCharacterCached()
 			return;
 		}
 	}
+}
+
+AActor* AHorrorPlayerController::GetCurrentPlayerActor()
+{
+	if (!CachedPlayerCharacter)
+	{
+		CachedPlayerCharacter = Cast<APlayerCharacterB>(GetPawn());
+	}
+
+	return CachedPlayerCharacter ? Cast<AActor>(CachedPlayerCharacter.Get()) : Cast<AActor>(GetPawn());
 }
 
 void AHorrorPlayerController::OnInnerMove(const FInputActionValue& Value)
