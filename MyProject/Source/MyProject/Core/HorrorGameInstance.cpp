@@ -137,16 +137,17 @@ void UHorrorGameInstance::SetFlag(FName FlagName, bool bValue, bool bAutoSaveAft
 
 	const bool* Existing = NarrativeFlags.Find(FlagName);
 	const bool bAlreadyHadSameValue = Existing && (*Existing == bValue);
+	if (bAlreadyHadSameValue)
+	{
+		return;
+	}
 
 	NarrativeFlags.Add(FlagName, bValue);
 
-	if (!bAlreadyHadSameValue)
-	{
-		UE_LOG(LogTemp, Log, TEXT("[HorrorGameInstance] Narrative flag set: %s = %s"),
-			*FlagName.ToString(), bValue ? TEXT("true") : TEXT("false"));
+	UE_LOG(LogTemp, Log, TEXT("[HorrorGameInstance] Narrative flag set: %s = %s"),
+		*FlagName.ToString(), bValue ? TEXT("true") : TEXT("false"));
 
-		OnNarrativeFlagSet.Broadcast(FlagName);
-	}
+	OnNarrativeFlagSet.Broadcast(FlagName);
 
 	if (FlagName == TEXT("NF_Ending_GameCompleted") && bValue)
 	{

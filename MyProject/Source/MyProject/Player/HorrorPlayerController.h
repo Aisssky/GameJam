@@ -21,6 +21,23 @@ class MYPROJECT_API AHorrorPlayerController : public APlayerController
 public:
 	AHorrorPlayerController();
 
+	virtual void Tick(float DeltaSeconds) override;
+
+	UFUNCTION(BlueprintCallable, Category = "Pause Menu")
+	void ResumeGameFromPause();
+
+	UFUNCTION(BlueprintCallable, Category = "Pause Menu")
+	bool SaveGameFromPause();
+
+	UFUNCTION(BlueprintCallable, Category = "Pause Menu")
+	void ReturnToMainMenuFromPause();
+
+	UFUNCTION(BlueprintCallable, Category = "Pause Menu")
+	void ExitMenuState();
+
+	UFUNCTION(BlueprintPure, Category = "Pause Menu")
+	bool IsPauseMenuOpen() const { return CurrentSubState == EGameSubState::SUBSTATE_MENU; }
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
@@ -56,6 +73,12 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input|InnerGame")
 	TObjectPtr<UInputAction> IA_InnerJump;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Pause Menu")
+	FName MainMenuLevelName = TEXT("L_MainMenu");
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Pause Menu", meta = (ClampMin = "0.0"))
+	float PauseSaveMessageDuration = 2.0f;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
 	TObjectPtr<UHorrorUIComponent> UIComponent;
 
@@ -87,7 +110,16 @@ protected:
 	void ClearAllInputContexts();
 
 	void EnterMenuState();
-	void ExitMenuState();
+	void CloseMenuState(bool bRestoreGameplayInput);
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Pause Menu")
+	void BP_OnPauseMenuSaveSucceeded(float DisplaySeconds);
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Pause Menu")
+	void BP_OnPauseMenuSaveFailed(const FText& Reason);
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Pause Menu")
+	void BP_OnReturnToMainMenuRequested();
 
 private:
 	UPROPERTY()
@@ -96,5 +128,10 @@ private:
 	UPROPERTY()
 	TObjectPtr<AInnerGameCharacter> CachedInnerCharacter;
 
+	bool bPendingPauseAutoClose = false;
+	double PauseAutoCloseRealtimeSeconds = 0.0;
+	bool bMenuMovementBlocked = false;
+
 	void EnsureInnerCharacterCached();
+	AActor* GetCurrentPlayerActor();
 };
