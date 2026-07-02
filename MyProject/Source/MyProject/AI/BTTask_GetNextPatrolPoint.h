@@ -2,7 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "BehaviorTree/BTTaskNode.h"
-#include "BehaviorTree/BlackboardKeySelector.h"
+#include "BehaviorTree/BehaviorTreeTypes.h"
 #include "BTTask_GetNextPatrolPoint.generated.h"
 
 UCLASS()

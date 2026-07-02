@@ -2,7 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "BehaviorTree/BTDecorator.h"
-#include "BehaviorTree/BlackboardKeySelector.h"
+#include "BehaviorTree/BehaviorTreeTypes.h"
 #include "BTDecorator_DistanceToTarget.generated.h"
 
 UENUM(BlueprintType)

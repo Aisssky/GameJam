@@ -135,7 +135,7 @@ protected:
 	void InitializeBehaviorTree();
 	bool IsLikelyPlayer(AActor* Actor) const;
 	AHorrorEnemyPawn* GetEnemyPawn() const;
-	UBlackboardComponent* GetEnemyBlackboard() const;
+	UBlackboardComponent* GetEnemyBlackboard();
 	void SetBlackboardDefaults();
 	void UpdateLineOfSight();
 	void SetBlackboardState(EEnemyAIState NewState);

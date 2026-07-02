@@ -1,6 +1,7 @@
 #include "BTTask_PlayChaseAudio.h"
 
 #include "HorrorEnemyPawn.h"
+#include "AIController.h"
 
 UBTTask_PlayChaseAudio::UBTTask_PlayChaseAudio()
 {

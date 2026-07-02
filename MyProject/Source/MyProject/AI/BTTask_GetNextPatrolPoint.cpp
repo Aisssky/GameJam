@@ -1,6 +1,7 @@
 #include "BTTask_GetNextPatrolPoint.h"
 
 #include "HorrorEnemyPawn.h"
+#include "AIController.h"
 #include "BehaviorTree/Blackboard/BlackboardKeyType_Object.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "GameFramework/Actor.h"

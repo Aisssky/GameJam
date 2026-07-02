@@ -1,6 +1,7 @@
 #include "BTTask_FindStalkLocation.h"
 
 #include "HorrorEnemyPawn.h"
+#include "AIController.h"
 #include "BehaviorTree/Blackboard/BlackboardKeyType_Object.h"
 #include "BehaviorTree/Blackboard/BlackboardKeyType_Vector.h"
 #include "BehaviorTree/BlackboardComponent.h"

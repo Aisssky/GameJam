@@ -281,7 +281,7 @@ AHorrorEnemyPawn* AHorrorEnemyAIController::GetEnemyPawn() const
 	return Cast<AHorrorEnemyPawn>(GetPawn());
 }
 
-UBlackboardComponent* AHorrorEnemyAIController::GetEnemyBlackboard() const
+UBlackboardComponent* AHorrorEnemyAIController::GetEnemyBlackboard()
 {
 	if (BlackboardComponent)
 	{
