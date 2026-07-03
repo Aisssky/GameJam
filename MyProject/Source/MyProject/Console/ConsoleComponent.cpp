@@ -2,12 +2,10 @@
 #include "../Core/HorrorGameInstance.h"
 #include "../Player/PlayerCharacterB.h"
 #include "GameFramework/Character.h"
-#include "Animation/AnimMontage.h"
-#include "TimerManager.h"
 
 UConsoleComponent::UConsoleComponent()
 {
-	PrimaryComponentTick.bCanEverTick = true;
+	PrimaryComponentTick.bCanEverTick = false;
 	CurrentState = EConsoleState::Hidden;
 }
 
@@ -37,50 +35,30 @@ void UConsoleComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 void UConsoleComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-	if (bAnimPlaying)
-	{
-		TickAnimProgress(DeltaTime, bIsTakeOut);
-	}
 }
 
 void UConsoleComponent::TakeOut()
 {
 	if (CurrentState != EConsoleState::Hidden) return;
+	if (bTransitionLocked) return;
 
-	CurrentState = EConsoleState::AnimatingOut;
+	SpawnConsoleActor();
+
+	if (CachedOwnerCharacter)
+	{
+		CachedOwnerCharacter->bIsHoldingConsole = true;
+	}
+
+	CurrentState = EConsoleState::Active;
 	OnConsoleStateChanged.Broadcast(CurrentState);
 
-	bIsTakeOut = true;
-	AnimElapsed = 0.0f;
-	bAnimPlaying = true;
+	bTransitionLocked = true;
+	GetWorld()->GetTimerManager().SetTimer(TransitionLockTimer, this, &UConsoleComponent::UnlockTransition, TransitionCooldown, false);
 
-	if (CachedOwnerCharacter && TakeOutAnimation)
-	{
-		CachedOwnerCharacter->PlayAnimMontage(TakeOutAnimation);
-	}
-}
-
-void UConsoleComponent::OnTakeOutAnimProgress(float Progress)
-{
-	if (Progress >= InputSwitchAtProgress && !CachedGameInstance)
-	{
-		CachedGameInstance = Cast<UHorrorGameInstance>(GetWorld()->GetGameInstance());
-	}
-
-	if (Progress >= InputSwitchAtProgress && CachedGameInstance
-		&& CachedGameInstance->CurrentLayerState != ELayerState::STATE_CONSOLE_ACTIVE)
+	if (CachedGameInstance && CachedGameInstance->CurrentLayerState != ELayerState::STATE_CONSOLE_ACTIVE)
 	{
 		CachedGameInstance->TransitionToLayer(ELayerState::STATE_CONSOLE_ACTIVE);
 	}
-}
-
-void UConsoleComponent::OnTakeOutAnimComplete()
-{
-	bAnimPlaying = false;
-	AnimElapsed = 0.0f;
-	CurrentState = EConsoleState::Active;
-	OnConsoleStateChanged.Broadcast(CurrentState);
 
 	if (CachedGameInstance)
 	{
@@ -91,32 +69,26 @@ void UConsoleComponent::OnTakeOutAnimComplete()
 void UConsoleComponent::PutAway()
 {
 	if (CurrentState != EConsoleState::Active) return;
+	if (bTransitionLocked) return;
 
-	CurrentState = EConsoleState::AnimatingAway;
-	OnConsoleStateChanged.Broadcast(CurrentState);
+	CurrentState = EConsoleState::Hidden;
 
-	bIsTakeOut = false;
-	AnimElapsed = 0.0f;
-	bAnimPlaying = true;
-
-	if (CachedOwnerCharacter && PutAwayAnimation)
+	if (CachedOwnerCharacter)
 	{
-		CachedOwnerCharacter->PlayAnimMontage(PutAwayAnimation);
+		CachedOwnerCharacter->bIsHoldingConsole = false;
 	}
-}
 
-void UConsoleComponent::OnPutAwayAnimComplete()
-{
-	bAnimPlaying = false;
-	AnimElapsed = 0.0f;
+	DestroyConsoleActor();
 
 	if (CachedGameInstance)
 	{
 		CachedGameInstance->TransitionToLayer(ELayerState::STATE_OUTER_GAMEPLAY);
 	}
 
-	CurrentState = EConsoleState::Hidden;
 	OnConsoleStateChanged.Broadcast(CurrentState);
+
+	bTransitionLocked = true;
+	GetWorld()->GetTimerManager().SetTimer(TransitionLockTimer, this, &UConsoleComponent::UnlockTransition, TransitionCooldown, false);
 
 	if (CachedGameInstance)
 	{
@@ -126,33 +98,25 @@ void UConsoleComponent::OnPutAwayAnimComplete()
 
 void UConsoleComponent::ForcePutAway()
 {
-	bAnimPlaying = false;
-	AnimElapsed = 0.0f;
-
 	CurrentState = EConsoleState::Hidden;
-	OnConsoleStateChanged.Broadcast(CurrentState);
-}
 
-void UConsoleComponent::TickAnimProgress(float DeltaTime, bool bIsTakingOut)
-{
-	AnimElapsed += DeltaTime;
-	float Progress = (AnimationDuration > 0.0f) ? FMath::Clamp(AnimElapsed / AnimationDuration, 0.0f, 1.0f) : 1.0f;
-
-	if (bIsTakingOut)
+	if (CachedOwnerCharacter)
 	{
-		OnTakeOutAnimProgress(Progress);
+		CachedOwnerCharacter->bIsHoldingConsole = false;
 	}
 
-	if (Progress >= 1.0f)
+	DestroyConsoleActor();
+
+	if (CachedGameInstance)
 	{
-		if (bIsTakingOut)
-		{
-			OnTakeOutAnimComplete();
-		}
-		else
-		{
-			OnPutAwayAnimComplete();
-		}
+		CachedGameInstance->TransitionToLayer(ELayerState::STATE_OUTER_GAMEPLAY);
+	}
+
+	OnConsoleStateChanged.Broadcast(CurrentState);
+
+	if (CachedGameInstance)
+	{
+		CachedGameInstance->OnConsoleToggled.Broadcast(false);
 	}
 }
 
@@ -180,4 +144,47 @@ void UConsoleComponent::OnGameInstanceLayerChanged(ELayerState From, ELayerState
 	{
 		ForcePutAway();
 	}
+}
+
+void UConsoleComponent::SpawnConsoleActor()
+{
+	if (!ConsoleActorClass || !CachedOwnerCharacter) return;
+	if (ConsoleActorInstance && IsValid(ConsoleActorInstance)) return;
+
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.Owner = CachedOwnerCharacter;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	ConsoleActorInstance = GetWorld()->SpawnActor<AActor>(
+		ConsoleActorClass,
+		CachedOwnerCharacter->GetActorLocation(),
+		CachedOwnerCharacter->GetActorRotation(),
+		SpawnParams);
+
+	if (!ConsoleActorInstance) return;
+
+	if (CachedOwnerCharacter->GetMesh())
+	{
+		ConsoleActorInstance->AttachToComponent(
+			CachedOwnerCharacter->GetMesh(),
+			FAttachmentTransformRules::SnapToTargetIncludingScale,
+			AttachSocketName);
+	}
+
+	ConsoleActorInstance->SetActorRelativeLocation(ConsoleAttachOffset);
+	ConsoleActorInstance->SetActorRelativeRotation(ConsoleAttachRotation);
+}
+
+void UConsoleComponent::DestroyConsoleActor()
+{
+	if (ConsoleActorInstance && IsValid(ConsoleActorInstance))
+	{
+		ConsoleActorInstance->Destroy();
+	}
+	ConsoleActorInstance = nullptr;
+}
+
+void UConsoleComponent::UnlockTransition()
+{
+	bTransitionLocked = false;
 }

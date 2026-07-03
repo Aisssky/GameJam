@@ -6,7 +6,6 @@
 #include "../Core/HorrorTypes.h"
 #include "ConsoleComponent.generated.h"
 
-class UAnimMontage;
 class UHorrorGameInstance;
 class APlayerCharacterB;
 
@@ -29,17 +28,23 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "Console")
 	EConsoleState CurrentState;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Console|Animation")
-	TObjectPtr<UAnimMontage> TakeOutAnimation;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Console")
+	float TransitionCooldown = 0.5f;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Console|Animation")
-	TObjectPtr<UAnimMontage> PutAwayAnimation;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Console|Actor")
+	TSubclassOf<AActor> ConsoleActorClass;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Console|Animation")
-	float AnimationDuration = 0.5f;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Console|Actor")
+	FName AttachSocketName = TEXT("hand_r");
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Console|Animation")
-	float InputSwitchAtProgress = 0.5f;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Console|Actor")
+	FVector ConsoleAttachOffset = FVector(0.0f, 0.0f, 0.0f);
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Console|Actor")
+	FRotator ConsoleAttachRotation = FRotator(0.0f, 90.0f, 0.0f);
+
+	UPROPERTY(BlueprintReadOnly, Category = "Console|Actor")
+	TObjectPtr<AActor> ConsoleActorInstance;
 
 	UPROPERTY(BlueprintAssignable, Category = "Console|Events")
 	FOnConsoleStateChanged OnConsoleStateChanged;
@@ -54,6 +59,15 @@ public:
 	void ForcePutAway();
 
 	UFUNCTION(BlueprintCallable, Category = "Console")
+	void SpawnConsoleActor();
+
+	UFUNCTION(BlueprintCallable, Category = "Console")
+	void DestroyConsoleActor();
+
+	UFUNCTION(BlueprintPure, Category = "Console")
+	bool IsConsoleActorActive() const { return ConsoleActorInstance != nullptr; }
+
+	UFUNCTION(BlueprintCallable, Category = "Console")
 	void EnterInnerGameplay();
 
 	UFUNCTION(BlueprintCallable, Category = "Console")
@@ -62,20 +76,12 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Console")
 	bool IsConsoleActive() const { return CurrentState == EConsoleState::Active; }
 
+	UFUNCTION(BlueprintPure, Category = "Console")
+	bool IsHoldingConsole() const { return ConsoleActorInstance != nullptr; }
+
 protected:
 	UFUNCTION()
-	void OnTakeOutAnimProgress(float Progress);
-
-	UFUNCTION()
-	void OnTakeOutAnimComplete();
-
-	UFUNCTION()
-	void OnPutAwayAnimComplete();
-
-	UFUNCTION()
 	void OnGameInstanceLayerChanged(ELayerState From, ELayerState To);
-
-	void TickAnimProgress(float DeltaTime, bool bIsTakingOut);
 
 	UPROPERTY()
 	TObjectPtr<UHorrorGameInstance> CachedGameInstance;
@@ -83,8 +89,10 @@ protected:
 	UPROPERTY()
 	TObjectPtr<APlayerCharacterB> CachedOwnerCharacter;
 
+	UFUNCTION()
+	void UnlockTransition();
+
 private:
-	float AnimElapsed = 0.0f;
-	bool bAnimPlaying = false;
-	bool bIsTakeOut = false;
+	bool bTransitionLocked = false;
+	FTimerHandle TransitionLockTimer;
 };

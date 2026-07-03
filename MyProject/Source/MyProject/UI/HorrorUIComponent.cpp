@@ -1,6 +1,8 @@
 #include "HorrorUIComponent.h"
 #include "../Core/HorrorGameInstance.h"
 #include "../Player/HorrorPlayerController.h"
+#include "../Player/PlayerCharacterB.h"
+#include "../Console/ConsoleComponent.h"
 #include "PauseMenuWidget.h"
 #include "DialogueLineWidget.h"
 #include "TaskPromptWidget.h"
@@ -238,6 +240,20 @@ void UHorrorUIComponent::SetPauseMenuStatusText(const FText& Message)
 
 void UHorrorUIComponent::ShowConsoleUI()
 {
+	if (AHorrorPlayerController* PC = Cast<AHorrorPlayerController>(GetOwner()))
+	{
+		if (APawn* Pawn = PC->GetPawn())
+		{
+			if (APlayerCharacterB* Char = Cast<APlayerCharacterB>(Pawn))
+			{
+				if (Char->ConsoleComponent && Char->ConsoleComponent->IsConsoleActorActive())
+				{
+					return;
+				}
+			}
+		}
+	}
+
 	if (!WBP_ConsoleUIClass) return;
 	if (!ConsoleUIInstance)
 	{

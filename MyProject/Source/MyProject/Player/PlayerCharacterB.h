@@ -42,6 +42,9 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "Movement")
 	bool bMovementEnabled = true;
 
+	UPROPERTY(BlueprintReadOnly, Category = "Console")
+	bool bIsHoldingConsole = false;
+
 	UFUNCTION(BlueprintCallable, Category = "Movement")
 	void DisableMovement();
 
