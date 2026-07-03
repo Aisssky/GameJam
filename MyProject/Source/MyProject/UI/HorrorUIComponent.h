@@ -37,6 +37,12 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI|Classes")
 	TSubclassOf<UUserWidget> WBP_MainMenuClass;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI|Classes")
+	TSubclassOf<UUserWidget> WBP_DialogueLineClass;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI|Classes")
+	TSubclassOf<UUserWidget> WBP_TaskPromptClass;
+
 	UFUNCTION(BlueprintCallable, Category = "UI|Panel")
 	void PushPanel(TSubclassOf<UUserWidget> WidgetClass);
 
@@ -57,6 +63,18 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "UI|Pause Menu")
 	void ShowPauseMenuSaveFailedMessage(const FText& Reason);
+
+	UFUNCTION(BlueprintCallable, Category = "UI|Dialogue")
+	void ShowDialogueLine(const FText& Text, float Duration = 4.0f, bool bLarge = false);
+
+	UFUNCTION(BlueprintCallable, Category = "UI|Dialogue")
+	void ClearDialogueLine();
+
+	UFUNCTION(BlueprintCallable, Category = "UI|Task")
+	void ShowTaskPrompt(const FText& TaskText, float Duration = 0.0f);
+
+	UFUNCTION(BlueprintCallable, Category = "UI|Task")
+	void ClearTaskPrompt();
 
 protected:
 	UFUNCTION()
@@ -102,6 +120,12 @@ protected:
 
 	UPROPERTY()
 	TObjectPtr<UUserWidget> MainMenuInstance;
+
+	UPROPERTY()
+	TObjectPtr<UUserWidget> DialogueLineInstance;
+
+	UPROPERTY()
+	TObjectPtr<UUserWidget> TaskPromptInstance;
 
 	UPROPERTY()
 	TArray<TObjectPtr<UUserWidget>> PanelStack;

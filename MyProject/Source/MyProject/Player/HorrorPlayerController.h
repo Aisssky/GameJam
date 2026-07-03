@@ -38,6 +38,18 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Pause Menu")
 	bool IsPauseMenuOpen() const { return CurrentSubState == EGameSubState::SUBSTATE_MENU; }
 
+	UFUNCTION(BlueprintCallable, Category = "Dialogue")
+	void ShowDialogue(const FText& Text, float Duration = 4.0f, bool bLarge = false);
+
+	UFUNCTION(BlueprintCallable, Category = "Dialogue")
+	void ClearDialogue();
+
+	UFUNCTION(BlueprintCallable, Category = "Dialogue")
+	void ShowTaskPrompt(const FText& TaskText, float Duration = 0.0f);
+
+	UFUNCTION(BlueprintCallable, Category = "Dialogue")
+	void ClearTaskPrompt();
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;

@@ -1,4 +1,6 @@
 #include "InnerGameplayManager.h"
+#include "InnerGameCharacter.h"
+#include "InnerGameCollectible.h"
 #include "../Core/HorrorGameInstance.h"
 #include "../Core/HorrorTypes.h"
 #include "Engine/SceneCapture2D.h"
@@ -98,9 +100,139 @@ void AInnerGameplayManager::StartInnerGame()
 	EnsureSceneCaptureCached();
 	SetupSceneCapture();
 
+	CollectedInLevel = 0;
+	CacheInnerCharacter();
+	BindInnerGameObjects();
+
 	OnL4LevelLoaded.Broadcast();
 
 	bIsL4Active = true;
+}
+
+void AInnerGameplayManager::CacheInnerCharacter()
+{
+	if (CachedInnerCharacter && IsValid(CachedInnerCharacter)) return;
+
+	for (TActorIterator<AInnerGameCharacter> It(GetWorld()); It; ++It)
+	{
+		AInnerGameCharacter* InnerChar = *It;
+		if (IsValid(InnerChar))
+		{
+			CachedInnerCharacter = InnerChar;
+
+			InnerChar->OnCharacterDied.AddDynamic(this, &AInnerGameplayManager::HandleCharacterDied);
+
+			UE_LOG(LogTemp, Log, TEXT("[InnerGameplayManager] Cached InnerCharacter '%s'"), *InnerChar->GetName());
+			return;
+		}
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("[InnerGameplayManager] CacheInnerCharacter: No InnerGameCharacter found!"));
+}
+
+void AInnerGameplayManager::BindInnerGameObjects()
+{
+	for (TActorIterator<AInnerGameCollectible> It(GetWorld()); It; ++It)
+	{
+		AInnerGameCollectible* Coll = *It;
+		if (IsValid(Coll))
+		{
+			Coll->OnCollected.AddDynamic(this, &AInnerGameplayManager::HandleCollectibleCollected);
+		}
+	}
+
+	for (TActorIterator<AInnerGameZone> It(GetWorld()); It; ++It)
+	{
+		AInnerGameZone* Zone = *It;
+		if (IsValid(Zone))
+		{
+			Zone->OnZoneTriggered.AddDynamic(this, &AInnerGameplayManager::HandleZoneTriggered);
+		}
+	}
+}
+
+void AInnerGameplayManager::HandleCollectibleCollected(FName ID, AActor* Collector)
+{
+	CollectedInLevel++;
+
+	UE_LOG(LogTemp, Log, TEXT("[InnerGameplayManager] Collectible '%s' collected. Total: %d/%d"),
+		*ID.ToString(), CollectedInLevel, RequiredCollectibles);
+
+	if (RequiredCollectibles > 0 && CollectedInLevel >= RequiredCollectibles)
+	{
+		TriggerWin();
+	}
+}
+
+void AInnerGameplayManager::HandleZoneTriggered(EInnerGameZoneType ZoneType, AActor* Trigger)
+{
+	if (!Trigger) return;
+
+	switch (ZoneType)
+	{
+	case EInnerGameZoneType::WinZone:
+		UE_LOG(LogTemp, Log, TEXT("[InnerGameplayManager] WinZone triggered by '%s'"), *Trigger->GetName());
+		TriggerWin();
+		break;
+
+	case EInnerGameZoneType::DeathZone:
+		UE_LOG(LogTemp, Log, TEXT("[InnerGameplayManager] DeathZone triggered by '%s'"), *Trigger->GetName());
+		if (AInnerGameCharacter* InnerChar = Cast<AInnerGameCharacter>(Trigger))
+		{
+			if (!InnerChar->IsInvincible())
+			{
+				InnerChar->TriggerDeath();
+			}
+		}
+		break;
+
+	case EInnerGameZoneType::Checkpoint:
+	{
+		UE_LOG(LogTemp, Log, TEXT("[InnerGameplayManager] Checkpoint triggered by '%s'"), *Trigger->GetName());
+		const int32 CpIndex = Cast<AInnerGameZone>(Trigger) ? Cast<AInnerGameZone>(Trigger)->CheckpointIndex : 0;
+		if (CachedInnerCharacter)
+		{
+			CachedInnerCharacter->SetCheckpoint(Trigger->GetActorLocation(), CpIndex);
+		}
+		break;
+	}
+	}
+}
+
+void AInnerGameplayManager::HandleCharacterDied()
+{
+	if (!CachedInnerCharacter) return;
+
+	if (CachedInnerCharacter->CurrentLives <= 0)
+	{
+		TriggerLose();
+	}
+}
+
+void AInnerGameplayManager::TriggerWin()
+{
+	if (!bIsL4Active) return;
+
+	if (CachedGameInstance && !L4WinNarrativeFlag.IsNone())
+	{
+		CachedGameInstance->SetFlag(L4WinNarrativeFlag, true, false);
+	}
+
+	OnGameWon.Broadcast();
+	TransitionToL3();
+}
+
+void AInnerGameplayManager::TriggerLose()
+{
+	if (!bIsL4Active) return;
+
+	if (CachedGameInstance && !L4LoseNarrativeFlag.IsNone())
+	{
+		CachedGameInstance->SetFlag(L4LoseNarrativeFlag, true, false);
+	}
+
+	OnGameLost.Broadcast();
+	TransitionToL3();
 }
 
 void AInnerGameplayManager::EnsureSceneCaptureCached()
@@ -153,8 +285,6 @@ void AInnerGameplayManager::SetupSceneCapture()
 
 void AInnerGameplayManager::ClearSceneCapture()
 {
-	// SceneCapture config (PrimitiveRenderMode, ShowOnlyActors, TextureTarget)
-	// is preserved so the console screen keeps showing L_AGameplay during L3.
 }
 
 void AInnerGameplayManager::EndInnerGame()

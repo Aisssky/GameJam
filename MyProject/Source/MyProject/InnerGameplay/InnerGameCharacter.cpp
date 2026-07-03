@@ -34,17 +34,30 @@ void AInnerGameCharacter::BeginPlay()
 
 	GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
 
+	CurrentLives = MaxLives;
+	LastCheckpointLocation = GetActorLocation();
+
 	CacheSceneCapture();
 
-	UE_LOG(LogTemp, Warning, TEXT("[InnerGameCharacter] BeginPlay at %s, CachedCapture=%s"),
+	UE_LOG(LogTemp, Warning, TEXT("[InnerGameCharacter] BeginPlay at %s, CachedCapture=%s, Lives=%d"),
 		*GetActorLocation().ToString(),
-		CachedCapture ? *CachedCapture->GetName() : TEXT("NULL"));
+		CachedCapture ? *CachedCapture->GetName() : TEXT("NULL"),
+		CurrentLives);
 }
 
 void AInnerGameCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	UpdateCaptureTransform();
+
+	if (bIsInvincible)
+	{
+		InvincibilityTimer -= DeltaTime;
+		if (InvincibilityTimer <= 0.0f)
+		{
+			bIsInvincible = false;
+		}
+	}
 }
 
 void AInnerGameCharacter::MoveForward(float Value)
@@ -63,6 +76,53 @@ void AInnerGameCharacter::DoJump()
 void AInnerGameCharacter::StopJump()
 {
 	StopJumping();
+}
+
+void AInnerGameCharacter::TriggerDeath()
+{
+	if (bIsInvincible) return;
+
+	CurrentLives--;
+	OnCharacterDied.Broadcast();
+
+	if (CurrentLives <= 0)
+	{
+		CurrentLives = 0;
+		RespawnAtCheckpoint();
+		CurrentLives = MaxLives;
+	}
+	else
+	{
+		RespawnAtCheckpoint();
+	}
+
+	bIsInvincible = true;
+	InvincibilityTimer = RespawnInvincibilityTime;
+}
+
+void AInnerGameCharacter::RespawnAtCheckpoint()
+{
+	const FVector RespawnLoc = bHasCheckpoint ? LastCheckpointLocation : LastCheckpointLocation;
+	SetActorLocation(RespawnLoc);
+
+	if (UCharacterMovementComponent* MoveComp = GetCharacterMovement())
+	{
+		MoveComp->Velocity = FVector::ZeroVector;
+	}
+}
+
+void AInnerGameCharacter::SetCheckpoint(FVector Location, int32 Index)
+{
+	LastCheckpointLocation = Location;
+	bHasCheckpoint = true;
+	OnCheckpointSet.Broadcast(Index);
+}
+
+int32 AInnerGameCharacter::AddCollectible(int32 Points)
+{
+	CollectedCount += Points;
+	OnCollectibleAdded.Broadcast(CollectedCount);
+	return CollectedCount;
 }
 
 void AInnerGameCharacter::CacheSceneCapture()
@@ -95,4 +155,3 @@ void AInnerGameCharacter::UpdateCaptureTransform()
 
 	CachedCapture->SetActorRotation(FRotator(0.0f, CaptureYawOffset, 0.0f));
 }
-

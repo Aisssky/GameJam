@@ -2,6 +2,8 @@
 #include "../Core/HorrorGameInstance.h"
 #include "../Player/HorrorPlayerController.h"
 #include "PauseMenuWidget.h"
+#include "DialogueLineWidget.h"
+#include "TaskPromptWidget.h"
 #include "Blueprint/UserWidget.h"
 #include "Components/Button.h"
 #include "Components/TextBlock.h"
@@ -89,6 +91,8 @@ void UHorrorUIComponent::HideAll()
 	HideConsoleUI();
 	HideInnerGameplayHUD();
 	HideMainMenu();
+	ClearDialogueLine();
+	ClearTaskPrompt();
 }
 
 void UHorrorUIComponent::ShowHUD()
@@ -321,4 +325,62 @@ void UHorrorUIComponent::PopPanel()
 UUserWidget* UHorrorUIComponent::GetTopPanel() const
 {
 	return PanelStack.Num() > 0 ? PanelStack.Last() : nullptr;
+}
+
+void UHorrorUIComponent::ShowDialogueLine(const FText& Text, float Duration, bool bLarge)
+{
+	if (!WBP_DialogueLineClass) return;
+	if (!DialogueLineInstance)
+	{
+		DialogueLineInstance = CreateWidget<UUserWidget>(GetWorld(), WBP_DialogueLineClass);
+	}
+	if (DialogueLineInstance && !DialogueLineInstance->IsInViewport())
+	{
+		DialogueLineInstance->AddToViewport();
+	}
+	if (UDialogueLineWidget* DLW = Cast<UDialogueLineWidget>(DialogueLineInstance))
+	{
+		DLW->ShowText(Text, Duration, bLarge);
+	}
+}
+
+void UHorrorUIComponent::ClearDialogueLine()
+{
+	if (UDialogueLineWidget* DLW = Cast<UDialogueLineWidget>(DialogueLineInstance))
+	{
+		DLW->ClearText();
+	}
+	if (DialogueLineInstance && DialogueLineInstance->IsInViewport())
+	{
+		DialogueLineInstance->RemoveFromParent();
+	}
+}
+
+void UHorrorUIComponent::ShowTaskPrompt(const FText& TaskText, float Duration)
+{
+	if (!WBP_TaskPromptClass) return;
+	if (!TaskPromptInstance)
+	{
+		TaskPromptInstance = CreateWidget<UUserWidget>(GetWorld(), WBP_TaskPromptClass);
+	}
+	if (TaskPromptInstance && !TaskPromptInstance->IsInViewport())
+	{
+		TaskPromptInstance->AddToViewport();
+	}
+	if (UTaskPromptWidget* TPW = Cast<UTaskPromptWidget>(TaskPromptInstance))
+	{
+		TPW->ShowTask(TaskText, Duration);
+	}
+}
+
+void UHorrorUIComponent::ClearTaskPrompt()
+{
+	if (UTaskPromptWidget* TPW = Cast<UTaskPromptWidget>(TaskPromptInstance))
+	{
+		TPW->ClearTask();
+	}
+	if (TaskPromptInstance && TaskPromptInstance->IsInViewport())
+	{
+		TaskPromptInstance->RemoveFromParent();
+	}
 }

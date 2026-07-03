@@ -421,6 +421,38 @@ AActor* AHorrorPlayerController::GetCurrentPlayerActor()
 	return CachedPlayerCharacter ? Cast<AActor>(CachedPlayerCharacter.Get()) : Cast<AActor>(GetPawn());
 }
 
+void AHorrorPlayerController::ShowDialogue(const FText& Text, float Duration, bool bLarge)
+{
+	if (UIComponent)
+	{
+		UIComponent->ShowDialogueLine(Text, Duration, bLarge);
+	}
+}
+
+void AHorrorPlayerController::ClearDialogue()
+{
+	if (UIComponent)
+	{
+		UIComponent->ClearDialogueLine();
+	}
+}
+
+void AHorrorPlayerController::ShowTaskPrompt(const FText& TaskText, float Duration)
+{
+	if (UIComponent)
+	{
+		UIComponent->ShowTaskPrompt(TaskText, Duration);
+	}
+}
+
+void AHorrorPlayerController::ClearTaskPrompt()
+{
+	if (UIComponent)
+	{
+		UIComponent->ClearTaskPrompt();
+	}
+}
+
 void AHorrorPlayerController::OnInnerMove(const FInputActionValue& Value)
 {
 	EnsureInnerCharacterCached();
