@@ -2,7 +2,7 @@
 ## 总体项目进度
 
 ```
-总体            ■■■■■■■■□□  ~75%
+总体            ■■■■■■■■□□  ~80%
 ```
 
 ---
@@ -11,8 +11,8 @@
 
 ```
 L1  主菜单        ■■■■■■■■■□  90%   C++ / BP 完整 / 存档 UI 就绪
-L2  外层游戏      ■■■■■■■□□□  75%   玩家 + 武器 + 敌人AI + 暂停菜单 / 缺交互系统
-L3  游戏机        ■■■■■■■■□□  80%   状态机 / SceneCapture+RT / 动画同步待修
+L2  外层游戏      ■■■■■■■■□□  80%   玩家 + 武器 + 敌人AI + 暂停菜单 + 视角输入
+L3  游戏机        ■■■■■■■■□□  85%   3D Actor 挂载 / AnimBP 持机 / WidgetComponent / 自由视角
 L4  内层游戏      ■■■■■■■■■□  90%   完整玩法循环: 收集/平台/区域/胜负/重生
 L5  过场          □□□□□□□□□□   0%   枚举占位
 ```
@@ -33,8 +33,9 @@ L5  过场          □□□□□□□□□□   0%   枚举占位
 | UI 管理 | UHorrorUIComponent 管理 Widget 生命周期 + PushPanel 堆栈 |
 | PlayerController | 4 层 IMC 切换、子状态管理 (NORMAL/MENU/INTERACT/STUNNED)、暂停菜单输入 |
 | 玩家角色 | 第一人称、移动/观察、武器切换、疲劳减速 |
-| 武器系统 (GAS) | 属性集、GameplayTags、开火/瞄准/放置护身符 |
-| 控制台组件 | 取出/收起/强制收起、动画进度驱动 |
+| 武器系统 (GAS) | 属性集、GameplayTags、开火/瞄准/放置护身符、GA 蓝图配置、IA 映射 |
+| 控制台组件 | 取出/收起/强制收起、3D Actor 生成/销毁、骨骼挂载、自由视角 |
+| 游戏机 BP | WidgetComponent 渲染 UI、AnimBP Blend by bIsHoldingConsole |
 | 门交互 | BPI_Door C++ 接口 + Door_Father BP (护身符放置/检测) |
 | 敌人 AI 框架 | HorrorEnemyPawn + AIController + 9 个 BT 节点 + AI Perception + 噪音库 |
 | L4 管理器 | 关卡流送、SceneCapture2D + RenderTarget、胜负判定、叙事 Flag 集成 |
@@ -49,7 +50,7 @@ L5  过场          □□□□□□□□□□   0%   枚举占位
 | 系统 | 已完成 | 缺失 |
 |------|--------|------|
 | 武器系统 | 逻辑完成 | 无视觉特效、音效、弹丸 |
-| 控制台动画 | 状态机完成 | 动画与计时器解耦，可能不同步 |
+| 敌人生成/管理 | C++ 框架 + AI 感知 | BP 待实现 |
 | 疲劳系统 | SetSpeedMultiplier | 无视觉/音效反馈 |
 | 敌人 AI | 完整 C++ 框架 + 行为树节点 + AI 感知 | 行为树资产未配置、无 BP 实现、捕获流程缺死亡/重生联动 |
 | 对话/任务 UI | C++ Widget 基类 + Controller API | BP 已创建，需在 Widget Designer 中布局 UI 控件 |
@@ -73,23 +74,24 @@ Source/MyProject/
 ├── GameModes/       259 行  3 个 GameMode (Base / Menu / Outer)
 ├── Player/          908 行  PlayerController / PlayerCharacterB
 ├── UI/             1552 行  UIComponent / MainMenu / SaveSlot / ConfirmDialog / PauseMenu / Dialogue / TaskPrompt
-├── Console/         273 行  ConsoleComponent
+├── Console/         208 行  ConsoleComponent (3D Actor 生成/销毁/骨骼挂载)
 ├── Weapon/         1019 行  GAS 组件 / 属性集 / GameplayTags / 3 个能力 / BPI_Door
 ├── AI/             1822 行  EnemyPawn / EnemyAIController / NoiseLibrary / 9 个 BT 节点
 └── InnerGameplay/   986 行  Manager + Character + Collectible + Platform + Zone (5 类)
 
-总计: 8185 行 C++ / 78 个源文件
+总计: ~8100 行 C++ / 78 个源文件
 
 Content/Blueprints/
 ├── Core/         4 (GI / GameMode x2 / InnerManager)
 ├── Player/       3 (Controller / PlayerCharacter / InnerCharacter)
 ├── UI/          12 (MenuFolder x10 + Dialogue x2)
+├── Console/      3 (BP_GameConsole + SK_Sequence + SK_Montage)
 ├── Interaction/  6 (CheckPoint / Collectible / DeathZone / Game / Platform / WinZone)
 └── Enemy/        待配置 (行为树 + Blackboard + BP_EnemyPawn)
 
 Content/ 其他资产:
 ├── Audio/        木地板脚步声
-├── Actors/       gun / MicroSD / game_console
+├── Actors/       gun / MicroSD / game_console (→ Blueprints/Console/)
 ├── Maps/         L_MainMenu / L_AGameplay (含外部 Actor)
 ├── Input/        14 IA + 5 IMC
 ├── Characters/   骨骼网格 / 动画 / 材质 (Unarmed + Rifle + Pistol)
