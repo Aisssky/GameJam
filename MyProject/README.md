@@ -35,7 +35,7 @@ L5  过场          □□□□□□□□□□   0%   枚举占位
 | 玩家角色 | 第一人称、移动/观察、武器切换、疲劳减速 |
 | 武器系统 (GAS) | 属性集、GameplayTags、开火/瞄准/放置护身符 |
 | 控制台组件 | 取出/收起/强制收起、动画进度驱动 |
-| 门接口 | BPI_Door (CanPlaceTalisman / PlaceTalisman / HasActiveTalisman) |
+| 门交互 | BPI_Door C++ 接口 + Door_Father BP (护身符放置/检测) |
 | 敌人 AI 框架 | HorrorEnemyPawn + AIController + 9 个 BT 节点 + AI Perception + 噪音库 |
 | L4 管理器 | 关卡流送、SceneCapture2D + RenderTarget、胜负判定、叙事 Flag 集成 |
 | L4 角色 | X 轴移动/跳跃、SceneCapture 固定侧视角、生命/死亡/无敌、检查点、收集物 |
@@ -53,12 +53,12 @@ L5  过场          □□□□□□□□□□   0%   枚举占位
 | 疲劳系统 | SetSpeedMultiplier | 无视觉/音效反馈 |
 | 敌人 AI | 完整 C++ 框架 + 行为树节点 + AI 感知 | 行为树资产未配置、无 BP 实现、捕获流程缺死亡/重生联动 |
 | 对话/任务 UI | C++ Widget 基类 + Controller API | BP 已创建，需在 Widget Designer 中布局 UI 控件 |
+| 交互系统 | 门 (Door_Father BP + BPI_Door C++ 接口: 护身符放置/检测) | 拾取/检查等其他交互对象待扩展 (纯蓝图) |
 
 ### 未开始 ❌
 
 | 系统 | 备注 |
 |------|------|
-| 交互系统 | IA_Interact 已就绪、BPI_Door 已声明、门模型已导入 — 零 C++ 实现 |
 | 醒来逻辑 | OnWakeUp 委托悬空、SUBSTATE_STUNNED 孤立 |
 | L5 过场 | 枚举占位 |
 | 物品/背包 | 设计未开始 |
