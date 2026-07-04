@@ -2,7 +2,7 @@
 ## 总体项目进度
 
 ```
-总体            ■■■■■■■■□□  ~82%
+总体            ■■■■■■■■■□  ~88%
 ```
 
 ---
@@ -11,7 +11,7 @@
 
 ```
 L1  主菜单        ■■■■■■■■■□  90%   C++ / BP 完整 / 存档 UI 就绪
-L2  外层游戏      ■■■■■■■■□□  82%   枪 Actor 生成 / 第一人称移动修复 / 武器状态机 AnimBP
+L2  外层游戏      ■■■■■■■■■□  88%   枪组件+Tag驱动显隐 / 第一人称移动修复 / 武器状态机 Blend Mask / 瞄准切换
 L3  游戏机        ■■■■■■■■■□  90%   3D Actor 挂载 / NoCollision 修复 / 视角同步 / WidgetComponent
 L4  内层游戏      ■■■■■■■■■□  90%   完整玩法循环: 收集/平台/区域/胜负/重生
 L5  过场          □□□□□□□□□□   0%   枚举占位
@@ -33,9 +33,9 @@ L5  过场          □□□□□□□□□□   0%   枚举占位
 | UI 管理 | UHorrorUIComponent 管理 Widget 生命周期 + PushPanel 堆栈 |
 | PlayerController | 4 层 IMC 切换、子状态管理 (NORMAL/MENU/INTERACT/STUNNED)、暂停菜单输入 |
 | 玩家角色 | 第一人称、移动/观察、武器切换、疲劳减速 |
-| 武器系统 (GAS) | 属性集、GameplayTags、开火/瞄准/放置护身符、枪 Actor 生成/销毁（骨骼挂载）、GA 蓝图配置、IA 映射 |
+| 武器系统 (GAS) | 属性集、GameplayTags、开火/瞄准/放置护身符、GunMesh 组件挂 hand_r + Tag 回调自动显隐、GA 蓝图配置、IA 映射、FireMontage 播放 |
 | 控制台组件 | 取出/收起/强制收起、3D Actor 生成/销毁、骨骼挂载、NoCollision 修复、自由视角 |
-| ABP_CharacterB | WeaponState 状态机: Unarmed → EquipGun → HoldGun → Aiming / FireGun |
+| ABP_CharacterB | WeaponState 状态机: Unarmed → HoldGun → Aiming，Blend Mask 上身混合，Tag 驱动 |
 | 游戏机 BP | WidgetComponent 渲染 UI、AnimBP Blend by bIsHoldingConsole |
 | 门交互 | BPI_Door C++ 接口 + Door_Father BP (护身符放置/检测) |
 | 敌人 AI 框架 | HorrorEnemyPawn + AIController + 9 个 BT 节点 + AI Perception + 噪音库 |
@@ -63,7 +63,6 @@ L5  过场          □□□□□□□□□□   0%   枚举占位
 |------|------|
 | 醒来逻辑 | OnWakeUp 委托悬空、SUBSTATE_STUNNED 孤立 |
 | L5 过场 | 枚举占位 |
-| 物品/背包 | 设计未开始 |
 
 ---
 
