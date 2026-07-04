@@ -6,6 +6,7 @@
 #include "../../Player/PlayerCharacterB.h"
 #include "Camera/CameraComponent.h"
 #include "Engine/World.h"
+#include "Animation/AnimInstance.h"
 
 #define TAGS FHorrorGameplayTags::Get()
 
@@ -50,6 +51,15 @@ void UGA_FireGun::ActivateAbility(
 
 	ConsumeGunAmmo(1);
 
+		// 播放开枪蒙太奇
+		if (FireMontage)
+		{
+			if (UAnimInstance* AnimInstance = ActorInfo->GetAnimInstance())
+			{
+				AnimInstance->Montage_Play(FireMontage);
+			}
+		}
+
 	const FVector Start = Camera->GetComponentLocation();
 	const FVector End = Start + Camera->GetForwardVector() * FireRange;
 
@@ -71,7 +81,7 @@ void UGA_FireGun::ActivateAbility(
 	if (Attr->GetGunAmmo() <= 0.0f)
 	{
 		ASC->RemoveLooseGameplayTag(TAGS.Weapon_Gun);
-		ASC->DestroyGunActor();
+		// OnGunTagChanged 回调自动隐藏枪模型
 	}
 
 	EndAbility(Handle, ActorInfo, ActivationInfo, false, false);

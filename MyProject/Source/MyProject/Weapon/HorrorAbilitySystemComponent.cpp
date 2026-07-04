@@ -45,8 +45,39 @@ void UHorrorAbilitySystemComponent::BeginPlay()
 	InitAttributeDefaults();
 	GrantDefaultAbilities();
 
-	AddLooseGameplayTag(TAGS.Weapon_Gun_Unlocked);
-	AddLooseGameplayTag(TAGS.Weapon_Talisman_Unlocked);
+	AddLooseGameplayTag(TAGS.Weapon_Unlocked_Gun);
+	AddLooseGameplayTag(TAGS.Weapon_Unlocked_Talisman);
+
+	if (!GunMesh && OwnerCharacter)
+	{
+		GunMesh = OwnerCharacter->GunMeshComponent;
+	}
+
+	if (GunMesh)
+	{
+		GunMesh->SetVisibility(false);
+	}
+
+	GunTagChangedHandle = RegisterGameplayTagEvent(TAGS.Weapon_Gun)
+		.AddUObject(this, &UHorrorAbilitySystemComponent::OnGunTagChanged);
+}
+
+void UHorrorAbilitySystemComponent::OnGunTagChanged(const FGameplayTag Tag, int32 NewCount)
+{
+	if (GunMesh)
+	{
+		GunMesh->SetVisibility(NewCount > 0);
+	}
+}
+
+void UHorrorAbilitySystemComponent::ShowGun()
+{
+	AddLooseGameplayTag(TAGS.Weapon_Gun);
+}
+
+void UHorrorAbilitySystemComponent::HideGun()
+{
+	RemoveLooseGameplayTag(TAGS.Weapon_Gun);
 }
 
 void UHorrorAbilitySystemComponent::GrantDefaultAbilities()
@@ -78,13 +109,11 @@ void UHorrorAbilitySystemComponent::ToggleGun()
 	if (HasMatchingGameplayTag(TAGS.Weapon_Gun))
 	{
 		RemoveLooseGameplayTag(TAGS.Weapon_Gun);
-		DestroyGunActor();
 	}
-	else if (HasMatchingGameplayTag(TAGS.Weapon_Gun_Unlocked) && GetGunAmmo() > 0.0f)
+	else if (HasMatchingGameplayTag(TAGS.Weapon_Unlocked_Gun) && GetGunAmmo() > 0.0f)
 	{
 		RemoveLooseGameplayTag(TAGS.Weapon_Talisman);
 		AddLooseGameplayTag(TAGS.Weapon_Gun);
-		SpawnGunActor();
 	}
 }
 
@@ -94,7 +123,7 @@ void UHorrorAbilitySystemComponent::ToggleTalisman()
 	{
 		RemoveLooseGameplayTag(TAGS.Weapon_Talisman);
 	}
-	else if (HasMatchingGameplayTag(TAGS.Weapon_Talisman_Unlocked) && GetTalismanCount() > 0.0f)
+	else if (HasMatchingGameplayTag(TAGS.Weapon_Unlocked_Talisman) && GetTalismanCount() > 0.0f)
 	{
 		RemoveLooseGameplayTag(TAGS.Weapon_Gun);
 		AddLooseGameplayTag(TAGS.Weapon_Talisman);
@@ -191,7 +220,6 @@ void UHorrorAbilitySystemComponent::SetupWeaponInput(UEnhancedInputComponent* En
 	if (IA_AimGun)
 	{
 		EnhancedInput->BindAction(IA_AimGun, ETriggerEvent::Started, this, &UHorrorAbilitySystemComponent::OnAimStartInput);
-		EnhancedInput->BindAction(IA_AimGun, ETriggerEvent::Completed, this, &UHorrorAbilitySystemComponent::OnAimEndInput);
 	}
 	if (IA_PlaceTalisman)
 	{
@@ -201,56 +229,19 @@ void UHorrorAbilitySystemComponent::SetupWeaponInput(UEnhancedInputComponent* En
 
 void UHorrorAbilitySystemComponent::BeginDestroy()
 {
-	DestroyGunActor();
-
 	if (CachedGameInstance)
 	{
 		CachedGameInstance->OnConsoleToggled.RemoveDynamic(this, &UHorrorAbilitySystemComponent::OnConsoleToggledCallback);
 		CachedGameInstance->OnLayerChanged.RemoveDynamic(this, &UHorrorAbilitySystemComponent::OnLayerChangedCallback);
 	}
 
+	if (GunTagChangedHandle.IsValid())
+	{
+		RegisterGameplayTagEvent(TAGS.Weapon_Gun).Remove(GunTagChangedHandle);
+		GunTagChangedHandle.Reset();
+	}
+
 	Super::BeginDestroy();
-}
-
-void UHorrorAbilitySystemComponent::SpawnGunActor()
-{
-	if (!GunActorClass || !OwnerCharacter) return;
-	if (GunActorInstance && IsValid(GunActorInstance)) return;
-
-	FActorSpawnParameters SpawnParams;
-	SpawnParams.Owner = OwnerCharacter;
-	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
-	GunActorInstance = GetWorld()->SpawnActor<AActor>(
-		GunActorClass,
-		OwnerCharacter->GetActorLocation(),
-		OwnerCharacter->GetActorRotation(),
-		SpawnParams);
-
-	if (!GunActorInstance) return;
-
-	// 关闭碰撞，避免枪推动角色胶囊体
-	GunActorInstance->SetActorEnableCollision(false);
-
-	if (OwnerCharacter->GetMesh())
-	{
-		GunActorInstance->AttachToComponent(
-			OwnerCharacter->GetMesh(),
-			FAttachmentTransformRules::SnapToTargetIncludingScale,
-			GunAttachSocketName);
-	}
-
-	GunActorInstance->SetActorRelativeLocation(GunAttachOffset);
-	GunActorInstance->SetActorRelativeRotation(GunAttachRotation);
-}
-
-void UHorrorAbilitySystemComponent::DestroyGunActor()
-{
-	if (GunActorInstance && IsValid(GunActorInstance))
-	{
-		GunActorInstance->Destroy();
-	}
-	GunActorInstance = nullptr;
 }
 
 void UHorrorAbilitySystemComponent::OnConsoleToggledCallback(bool bConsoleActive)
@@ -271,7 +262,7 @@ void UHorrorAbilitySystemComponent::OnConsoleToggledCallback(bool bConsoleActive
 
 		RemoveLooseGameplayTag(TAGS.Weapon_Gun);
 		RemoveLooseGameplayTag(TAGS.Weapon_Talisman);
-		DestroyGunActor();
+
 		AddLooseGameplayTag(TAGS.State_InputBlocked_Console);
 	}
 	else
@@ -281,10 +272,6 @@ void UHorrorAbilitySystemComponent::OnConsoleToggledCallback(bool bConsoleActive
 		if (bHasSavedWeapon && SavedWeaponBeforeConsole.IsValid())
 		{
 			AddLooseGameplayTag(SavedWeaponBeforeConsole);
-			if (SavedWeaponBeforeConsole == TAGS.Weapon_Gun)
-			{
-				SpawnGunActor();
-			}
 		}
 		bHasSavedWeapon = false;
 	}
@@ -313,7 +300,12 @@ void UHorrorAbilitySystemComponent::OnFireInput(const FInputActionValue& Value)
 
 void UHorrorAbilitySystemComponent::OnAimStartInput(const FInputActionValue& Value)
 {
-	if (HasMatchingGameplayTag(TAGS.Weapon_Gun))
+	if (HasMatchingGameplayTag(TAGS.Weapon_Aiming))
+	{
+		FGameplayTagContainer AimAssetTag(TAGS.Ability_Aim);
+		CancelAbilities(&AimAssetTag);
+	}
+	else if (HasMatchingGameplayTag(TAGS.Weapon_Gun))
 	{
 		FGameplayTagContainer AimTag(TAGS.Ability_Aim);
 		TryActivateAbilitiesByTag(AimTag);
@@ -322,8 +314,6 @@ void UHorrorAbilitySystemComponent::OnAimStartInput(const FInputActionValue& Val
 
 void UHorrorAbilitySystemComponent::OnAimEndInput(const FInputActionValue& Value)
 {
-	FGameplayTagContainer AimingTag(TAGS.Weapon_Aiming);
-	CancelAbilities(&AimingTag);
 }
 
 void UHorrorAbilitySystemComponent::OnPlaceTalismanInput(const FInputActionValue& Value)

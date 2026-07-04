@@ -10,6 +10,7 @@ class UCameraComponent;
 class UCharacterMovementComponent;
 class UHorrorAbilitySystemComponent;
 class UInputAction;
+class UStaticMeshComponent;
 
 UCLASS()
 class MYPROJECT_API APlayerCharacterB : public ACharacter, public IAbilitySystemInterface
@@ -68,6 +69,10 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
 	TObjectPtr<UHorrorAbilitySystemComponent> AbilitySystemComponent;
+
+	// GunMesh 由 ASC 的 Weapon.Gun Tag 回调自动控制显隐
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
+	TObjectPtr<UStaticMeshComponent> GunMeshComponent;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
 	TObjectPtr<UInputAction> IA_Move;

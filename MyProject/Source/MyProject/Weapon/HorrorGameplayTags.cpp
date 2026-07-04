@@ -13,8 +13,8 @@ FHorrorGameplayTags::FHorrorGameplayTags()
 
 	Weapon_Gun = Manager.AddNativeGameplayTag(TEXT("Weapon.Gun"));
 	Weapon_Talisman = Manager.AddNativeGameplayTag(TEXT("Weapon.Talisman"));
-	Weapon_Gun_Unlocked = Manager.AddNativeGameplayTag(TEXT("Weapon.Gun.Unlocked"));
-	Weapon_Talisman_Unlocked = Manager.AddNativeGameplayTag(TEXT("Weapon.Talisman.Unlocked"));
+	Weapon_Unlocked_Gun = Manager.AddNativeGameplayTag(TEXT("Weapon.Unlocked.Gun"));
+	Weapon_Unlocked_Talisman = Manager.AddNativeGameplayTag(TEXT("Weapon.Unlocked.Talisman"));
 	Weapon_Aiming = Manager.AddNativeGameplayTag(TEXT("Weapon.Aiming"));
 
 	State_InputBlocked_Console = Manager.AddNativeGameplayTag(TEXT("State.InputBlocked.Console"));

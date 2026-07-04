@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "AbilitySystemComponent.h"
+#include "Components/MeshComponent.h"
 #include "HorrorAbilitySystemComponent.generated.h"
 
 class UHorrorAttributeSet;
@@ -25,25 +26,23 @@ public:
 	TArray<TSubclassOf<class UGameplayAbility>> DefaultAbilities;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Gun")
-	int32 InitialGunAmmo = 0;
+	int32 InitialGunAmmo = 6;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Talisman")
-	int32 InitialTalismanCount = 0;
+	int32 InitialTalismanCount = 3;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|Gun")
-	TSubclassOf<AActor> GunActorClass;
-
+	// 指向角色 BP 上预先放好的枪模型，挂在 hand_r 骨骼，默认 Hidden
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Weapon|Gun")
-	FName GunAttachSocketName = TEXT("hand_r");
+	TObjectPtr<UMeshComponent> GunMesh;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Weapon|Gun")
-	FVector GunAttachOffset = FVector(0.0f, 0.0f, 0.0f);
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	void ShowGun();
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Weapon|Gun")
-	FRotator GunAttachRotation = FRotator(0.0f, 0.0f, 0.0f);
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	void HideGun();
 
-	UPROPERTY(BlueprintReadOnly, Category = "Weapon|Gun")
-	TObjectPtr<AActor> GunActorInstance;
+	// Weapon.Gun Tag 变化回调 → 同步枪模型显隐 + ABP 动画状态机 bool
+	void OnGunTagChanged(const FGameplayTag Tag, int32 NewCount);
 
 	void GrantDefaultAbilities();
 	void InitAttributeDefaults();
@@ -56,12 +55,6 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	void SetWeaponInputBlocked(bool bBlocked, FGameplayTag BlockTag);
-
-	UFUNCTION(BlueprintCallable, Category = "Weapon")
-	void SpawnGunActor();
-
-	UFUNCTION(BlueprintCallable, Category = "Weapon")
-	void DestroyGunActor();
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	int32 AddGunAmmo(int32 Amount);
@@ -125,9 +118,12 @@ protected:
 	void OnAimEndInput(const FInputActionValue& Value);
 	void OnPlaceTalismanInput(const FInputActionValue& Value);
 
+private:
 	UPROPERTY()
 	TObjectPtr<UHorrorGameInstance> CachedGameInstance;
 
 	FGameplayTag SavedWeaponBeforeConsole;
 	bool bHasSavedWeapon;
+
+	FDelegateHandle GunTagChangedHandle;
 };

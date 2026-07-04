@@ -5,6 +5,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "EnhancedInputComponent.h"
 #include "InputActionValue.h"
+#include "Components/StaticMeshComponent.h"
 
 APlayerCharacterB::APlayerCharacterB()
 {
@@ -16,6 +17,9 @@ APlayerCharacterB::APlayerCharacterB()
 
 	ConsoleComponent = CreateDefaultSubobject<UConsoleComponent>(TEXT("ConsoleComponent"));
 	AbilitySystemComponent = CreateDefaultSubobject<UHorrorAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
+	GunMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("GunMesh"));
+	GunMeshComponent->SetupAttachment(GetMesh(), TEXT("hand_r"));
+	GunMeshComponent->SetVisibility(false);  // 编辑器可见，游戏里默认隐藏
 
 	bUseControllerRotationYaw = true;
 
@@ -56,12 +60,12 @@ void APlayerCharacterB::Tick(float DeltaTime)
 		const FRotator CtrlRot = Controller->GetControlRotation();
 		SetActorRotation(FRotator(0.0f, CtrlRot.Yaw, 0.0f));
 
-		// MOVE_None 期间持续清零速度
 		if (UCharacterMovementComponent* MoveComp = GetCharacterMovement())
 		{
 			MoveComp->Velocity = FVector::ZeroVector;
 		}
 	}
+
 }
 
 void APlayerCharacterB::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -80,11 +84,11 @@ void APlayerCharacterB::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		}
 		if (IA_ToggleGun)
 		{
-			EnhancedInput->BindAction(IA_ToggleGun, ETriggerEvent::Triggered, this, &APlayerCharacterB::OnToggleGunInput);
+			EnhancedInput->BindAction(IA_ToggleGun, ETriggerEvent::Started, this, &APlayerCharacterB::OnToggleGunInput);
 		}
 		if (IA_ToggleTalisman)
 		{
-			EnhancedInput->BindAction(IA_ToggleTalisman, ETriggerEvent::Triggered, this, &APlayerCharacterB::OnToggleTalismanInput);
+			EnhancedInput->BindAction(IA_ToggleTalisman, ETriggerEvent::Started, this, &APlayerCharacterB::OnToggleTalismanInput);
 		}
 
 		if (AbilitySystemComponent)
@@ -159,7 +163,7 @@ void APlayerCharacterB::EnableMovement()
 		if (UCharacterMovementComponent* MoveComp = GetCharacterMovement())
 		{
 			MoveComp->SetMovementMode(MOVE_Walking);
-			MoveComp->Velocity = FVector::ZeroVector;  // 清除 MOVE_None 期间残留的碰撞速度
+			MoveComp->Velocity = FVector::ZeroVector;
 		}
 	}
 }

@@ -9,8 +9,8 @@ struct MYPROJECT_API FHorrorGameplayTags
 
 	FGameplayTag Weapon_Gun;
 	FGameplayTag Weapon_Talisman;
-	FGameplayTag Weapon_Gun_Unlocked;
-	FGameplayTag Weapon_Talisman_Unlocked;
+	FGameplayTag Weapon_Unlocked_Gun;       // 平级，非 Weapon.Gun 子 Tag
+	FGameplayTag Weapon_Unlocked_Talisman;  // 平级，非 Weapon.Talisman 子 Tag
 	FGameplayTag Weapon_Aiming;
 
 	FGameplayTag State_InputBlocked_Console;
