@@ -154,7 +154,11 @@ void AHorrorPlayerController::ClearAllInputContexts()
 	if (UEnhancedInputLocalPlayerSubsystem* Subsystem =
 		ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
 	{
-		Subsystem->ClearAllMappings();
+		if (IMC_Gameplay)     Subsystem->RemoveMappingContext(IMC_Gameplay);
+		if (IMC_Menu)         Subsystem->RemoveMappingContext(IMC_Menu);
+		if (IMC_ConsoleUI)    Subsystem->RemoveMappingContext(IMC_ConsoleUI);
+		if (IMC_InnerGameplay)Subsystem->RemoveMappingContext(IMC_InnerGameplay);
+		if (IMC_Cinematic)    Subsystem->RemoveMappingContext(IMC_Cinematic);
 	}
 }
 

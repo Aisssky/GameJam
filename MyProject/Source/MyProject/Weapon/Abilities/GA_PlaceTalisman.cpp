@@ -12,7 +12,9 @@
 
 UGA_PlaceTalisman::UGA_PlaceTalisman()
 {
-	AbilityTags.AddTag(TAGS.Ability_PlaceTalisman);
+	FGameplayTagContainer AssetTags;
+	AssetTags.AddTag(TAGS.Ability_PlaceTalisman);
+	SetAssetTags(AssetTags);
 	ActivationOwnedTags.AddTag(TAGS.Ability_PlaceTalisman);
 	ActivationBlockedTags.AddTag(TAGS.State_InputBlocked_Console);
 	ActivationBlockedTags.AddTag(TAGS.State_InputBlocked_Menu);

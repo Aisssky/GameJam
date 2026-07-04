@@ -30,6 +30,21 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Talisman")
 	int32 InitialTalismanCount = 0;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|Gun")
+	TSubclassOf<AActor> GunActorClass;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Weapon|Gun")
+	FName GunAttachSocketName = TEXT("hand_r");
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Weapon|Gun")
+	FVector GunAttachOffset = FVector(0.0f, 0.0f, 0.0f);
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Weapon|Gun")
+	FRotator GunAttachRotation = FRotator(0.0f, 0.0f, 0.0f);
+
+	UPROPERTY(BlueprintReadOnly, Category = "Weapon|Gun")
+	TObjectPtr<AActor> GunActorInstance;
+
 	void GrantDefaultAbilities();
 	void InitAttributeDefaults();
 
@@ -41,6 +56,12 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	void SetWeaponInputBlocked(bool bBlocked, FGameplayTag BlockTag);
+
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	void SpawnGunActor();
+
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	void DestroyGunActor();
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	int32 AddGunAmmo(int32 Amount);

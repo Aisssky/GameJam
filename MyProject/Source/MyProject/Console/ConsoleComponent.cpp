@@ -2,6 +2,7 @@
 #include "../Core/HorrorGameInstance.h"
 #include "../Player/PlayerCharacterB.h"
 #include "GameFramework/Character.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 UConsoleComponent::UConsoleComponent()
 {
@@ -76,6 +77,12 @@ void UConsoleComponent::PutAway()
 	if (CachedOwnerCharacter)
 	{
 		CachedOwnerCharacter->bIsHoldingConsole = false;
+
+		// 清除控制台碰撞导致的残留速度
+		if (UCharacterMovementComponent* MoveComp = CachedOwnerCharacter->GetCharacterMovement())
+		{
+			MoveComp->Velocity = FVector::ZeroVector;
+		}
 	}
 
 	DestroyConsoleActor();
@@ -162,6 +169,9 @@ void UConsoleComponent::SpawnConsoleActor()
 		SpawnParams);
 
 	if (!ConsoleActorInstance) return;
+
+	// 关闭整 Actor 碰撞，避免推角色
+	ConsoleActorInstance->SetActorEnableCollision(false);
 
 	if (CachedOwnerCharacter->GetMesh())
 	{

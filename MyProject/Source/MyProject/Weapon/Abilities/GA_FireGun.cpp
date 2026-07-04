@@ -11,7 +11,9 @@
 
 UGA_FireGun::UGA_FireGun()
 {
-	AbilityTags.AddTag(TAGS.Ability_FireGun);
+	FGameplayTagContainer AssetTags;
+	AssetTags.AddTag(TAGS.Ability_FireGun);
+	SetAssetTags(AssetTags);
 	ActivationOwnedTags.AddTag(TAGS.Ability_FireGun);
 	ActivationBlockedTags.AddTag(TAGS.State_InputBlocked_Console);
 	ActivationBlockedTags.AddTag(TAGS.State_InputBlocked_Menu);
@@ -69,6 +71,7 @@ void UGA_FireGun::ActivateAbility(
 	if (Attr->GetGunAmmo() <= 0.0f)
 	{
 		ASC->RemoveLooseGameplayTag(TAGS.Weapon_Gun);
+		ASC->DestroyGunActor();
 	}
 
 	EndAbility(Handle, ActorInfo, ActivationInfo, false, false);

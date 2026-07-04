@@ -36,6 +36,11 @@ void APlayerCharacterB::BeginPlay()
 {
 	Super::BeginPlay();
 
+	if (AbilitySystemComponent)
+	{
+		AbilitySystemComponent->InitAbilityActorInfo(this, this);
+	}
+
 	if (UCharacterMovementComponent* MoveComp = GetCharacterMovement())
 	{
 		MoveComp->MaxWalkSpeed = WalkSpeed;
@@ -45,6 +50,18 @@ void APlayerCharacterB::BeginPlay()
 void APlayerCharacterB::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	if (Controller && !bMovementEnabled)
+	{
+		const FRotator CtrlRot = Controller->GetControlRotation();
+		SetActorRotation(FRotator(0.0f, CtrlRot.Yaw, 0.0f));
+
+		// MOVE_None 期间持续清零速度
+		if (UCharacterMovementComponent* MoveComp = GetCharacterMovement())
+		{
+			MoveComp->Velocity = FVector::ZeroVector;
+		}
+	}
 }
 
 void APlayerCharacterB::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -84,8 +101,14 @@ void APlayerCharacterB::OnMove(const FInputActionValue& Value)
 	FVector2D MoveVector = Value.Get<FVector2D>();
 	if (Controller)
 	{
-		AddMovementInput(GetActorForwardVector(), MoveVector.Y);
-		AddMovementInput(GetActorRightVector(), MoveVector.X);
+		FRotator CamRot = Controller->GetControlRotation();
+		CamRot.Pitch = 0.0f;
+		CamRot.Roll = 0.0f;
+		const FVector CamForward = FRotationMatrix(CamRot).GetScaledAxis(EAxis::X);
+		const FVector CamRight   = FRotationMatrix(CamRot).GetScaledAxis(EAxis::Y);
+
+		AddMovementInput(CamForward, MoveVector.Y);
+		AddMovementInput(CamRight,   MoveVector.X);
 	}
 }
 
@@ -136,6 +159,7 @@ void APlayerCharacterB::EnableMovement()
 		if (UCharacterMovementComponent* MoveComp = GetCharacterMovement())
 		{
 			MoveComp->SetMovementMode(MOVE_Walking);
+			MoveComp->Velocity = FVector::ZeroVector;  // 清除 MOVE_None 期间残留的碰撞速度
 		}
 	}
 }

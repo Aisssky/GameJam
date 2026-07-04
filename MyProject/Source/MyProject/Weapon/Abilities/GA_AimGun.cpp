@@ -7,7 +7,9 @@
 
 UGA_AimGun::UGA_AimGun()
 {
-	AbilityTags.AddTag(TAGS.Ability_Aim);
+	FGameplayTagContainer AssetTags;
+	AssetTags.AddTag(TAGS.Ability_Aim);
+	SetAssetTags(AssetTags);
 	ActivationOwnedTags.AddTag(TAGS.Weapon_Aiming);
 	ActivationBlockedTags.AddTag(TAGS.State_InputBlocked_Console);
 	ActivationBlockedTags.AddTag(TAGS.State_InputBlocked_Menu);
