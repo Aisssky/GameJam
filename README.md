@@ -54,7 +54,7 @@ L5  过场          □□□□□□□□□□   0%   枚举占位
 |------|--------|------|
 | 武器系统 | 逻辑+弹丸+音效+IK 完成 | 命中反馈特效（无 Niagara 资产） |
 | 疲劳系统 | SetSpeedMultiplier | 无视觉/音效反馈 |
-| 敌人 AI | 完整 C++ 框架 + 9 个 BT 节点 + 4 个蓝图资产 | 行为树逻辑待调试 / 捕获流程缺死亡/重生联动 |
+| 敌人 AI | C++ 框架 + 9 个 BT 节点 + 4 个蓝图资产 + 巡逻/追逐分支完成 | Investigate/Stalk 分支待补 / 雪花屏 UI 未接 / 死亡重生联动 |
 | 对话/任务 UI | C++ Widget 基类 + Controller API + DataTable 配表 | BP Widget 布局待完善 |
 | 交互系统 | 门交互 (Door_Father BP + BPI_Door 接口) | 拾取/检查等交互对象待扩展 |
 | 瞄准系统 | GA_AimGun C++ 已实现 | BP 蓝图资产未配置 |
@@ -81,13 +81,13 @@ Source/MyProject/
 ├── AI/             1822 行  EnemyPawn / AIController / NoiseLibrary / 9 个 BT 节点
 └── InnerGameplay/   986 行  Manager + Character + Collectible + Platform + Zone
 
-总计: ~8400 行 C++ / 79 个源文件
+总计: ~8400 行 C++ / 83 个源文件
 
 Content/Blueprints/
 ├── Core/         4 (GI / GameMode x2 / InnerManager)
 ├── Player/       3 (Controller / PlayerCharacter / InnerCharacter)
 ├── UI/          12 (MenuFolder x10 + Dialogue x2)
-├── ConsoleGun/   4 (BP_GameConsole + BP_Gun + BP_Bullet + SK_Sequence x2)
+├── ConsoleGun/   5 (BP_GameConsole + BP_Gun + BP_Bullet + SK_Sequence + SK_Montage)
 ├── Interaction/  6 (CheckPoint / Collectible / DeathZone / Game / Platform / WinZone)
 ├── Enemy/        4 (BP_EnemyPawn + BP_EnemyAIController + BT_Enemy + BB_Enemy)
 └── ASC/GA/       1 (BP_GA_FireGun)
