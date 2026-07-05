@@ -2,7 +2,7 @@
 ## 总体项目进度
 
 ```
-总体            ■■■■■■■■■□  ~88%
+总体            ■■■■■■■■■□  ~89%
 ```
 
 ---
@@ -11,7 +11,7 @@
 
 ```
 L1  主菜单        ■■■■■■■■■□  90%   C++ / BP 完整 / 存档 UI 就绪
-L2  外层游戏      ■■■■■■■■■□  88%   枪组件+Tag驱动显隐 / 第一人称移动修复 / 武器状态机 Blend Mask / 瞄准切换
+L2  外层游戏      ■■■■■■■■■□  90%   枪特效(Niagara) / 左手IK / Tag驱动显隐 / 第一人称移动修复 / 武器状态机 Blend Mask / 瞄准切换
 L3  游戏机        ■■■■■■■■■□  90%   3D Actor 挂载 / NoCollision 修复 / 视角同步 / WidgetComponent
 L4  内层游戏      ■■■■■■■■■□  90%   完整玩法循环: 收集/平台/区域/胜负/重生
 L5  过场          □□□□□□□□□□   0%   枚举占位
@@ -33,7 +33,7 @@ L5  过场          □□□□□□□□□□   0%   枚举占位
 | UI 管理 | UHorrorUIComponent 管理 Widget 生命周期 + PushPanel 堆栈 |
 | PlayerController | 4 层 IMC 切换、子状态管理 (NORMAL/MENU/INTERACT/STUNNED)、暂停菜单输入 |
 | 玩家角色 | 第一人称、移动/观察、武器切换、疲劳减速 |
-| 武器系统 (GAS) | 属性集、GameplayTags、开火/瞄准/放置护身符、GunMesh 组件挂 hand_r + Tag 回调自动显隐、GA 蓝图配置、IA 映射、FireMontage 播放 |
+| 武器系统 (GAS) | 属性集、GameplayTags、开火/瞄准/放置护身符、GunMesh 组件挂 hand_r + Tag 回调自动显隐、GA 蓝图配置、IA 映射、FireMontage 播放、Niagara 枪口闪光/弹道拖尾/命中特效（特效还在找）、FireSound、FireCameraShake、左手IK (GetLeftHandIKTarget) |
 | 控制台组件 | 取出/收起/强制收起、3D Actor 生成/销毁、骨骼挂载、NoCollision 修复、自由视角 |
 | ABP_CharacterB | WeaponState 状态机: Unarmed → HoldGun → Aiming，Blend Mask 上身混合，Tag 驱动 |
 | 游戏机 BP | WidgetComponent 渲染 UI、AnimBP Blend by bIsHoldingConsole |
@@ -42,7 +42,7 @@ L5  过场          □□□□□□□□□□   0%   枚举占位
 | L4 管理器 | 关卡流送、SceneCapture2D + RenderTarget、胜负判定、叙事 Flag 集成 |
 | L4 角色 | X 轴移动/跳跃、SceneCapture 固定侧视角、生命/死亡/无敌、检查点、收集物 |
 | L4 玩法系统 | 移动平台 (往返/循环) + 收集物 + 胜利区/死亡区/检查点 + 胜负条件 |
-| 对话/任务 UI | DialogueLineWidget + TaskPromptWidget + Controller API |
+| 对话/任务 UI | DialogueLineWidget + TaskPromptWidget + Controller API + DataTable 配表 (ShowDialogueByID / ShowTaskPromptByID) |
 | SceneCapture 渲染 | M_RenderTarget + RT_InnerGameplay、PIE 流送时序修复 |
 | 自动保存触发器 | BoxComponent 重叠触发 AutoSave |
 
@@ -50,11 +50,11 @@ L5  过场          □□□□□□□□□□   0%   枚举占位
 
 | 系统 | 已完成 | 缺失 |
 |------|--------|------|
-| 武器系统 | 逻辑完成 | 无视觉特效、音效、弹丸 |
+| 武器系统 | 逻辑+特效+音效+IK 完成 | 弹丸系统未实现 |
 | 敌人生成/管理 | C++ 框架 + AI 感知 | BP 待实现 |
 | 疲劳系统 | SetSpeedMultiplier | 无视觉/音效反馈 |
 | 敌人 AI | 完整 C++ 框架 + 行为树节点 + AI 感知 | 行为树资产未配置、无 BP 实现、捕获流程缺死亡/重生联动 |
-| 对话/任务 UI | C++ Widget 基类 + Controller API | BP 已创建，需在 Widget Designer 中布局 UI 控件 |
+| 对话/任务 UI | C++ Widget 基类 + Controller API + DataTable 配表 | BP Widget 布局待完善 |
 | 交互系统 | 门 (Door_Father BP + BPI_Door C++ 接口: 护身符放置/检测) | 拾取/检查等其他交互对象待扩展 (纯蓝图) |
 
 ### 未开始 ❌
@@ -72,14 +72,14 @@ L5  过场          □□□□□□□□□□   0%   枚举占位
 Source/MyProject/
 ├── Core/           1343 行  GameInstance / 类型 / 存档 / 触发器 / 叙事库
 ├── GameModes/       259 行  3 个 GameMode (Base / Menu / Outer)
-├── Player/          922 行  PlayerController / PlayerCharacterB / 相机移动
-├── UI/             1552 行  UIComponent / MainMenu / SaveSlot / ConfirmDialog / PauseMenu / Dialogue / TaskPrompt
+├── Player/          965 行  PlayerController / PlayerCharacterB / 相机移动 / 左手IK
+├── UI/             1634 行  UIComponent / MainMenu / SaveSlot / ConfirmDialog / PauseMenu / Dialogue / TaskPrompt / DialogueData
 ├── Console/         218 行  ConsoleComponent (3D Actor 生成/销毁/骨骼挂载/碰撞修复)
-├── Weapon/         1073 行  GAS 组件 / 属性集 / GameplayTags / 3 个能力 / 枪 Actor 生成/销毁
+├── Weapon/         1161 行  GAS 组件 / 属性集 / GameplayTags / 3 个能力 / 枪 Actor 生成/销毁 / Niagara 特效
 ├── AI/             1822 行  EnemyPawn / EnemyAIController / NoiseLibrary / 9 个 BT 节点
 └── InnerGameplay/   986 行  Manager + Character + Collectible + Platform + Zone (5 类)
 
-总计: ~8200 行 C++ / 78 个源文件
+总计: ~8400 行 C++ / 79 个源文件
 
 Content/Blueprints/
 ├── Core/         4 (GI / GameMode x2 / InnerManager)
