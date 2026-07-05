@@ -7,6 +7,10 @@
 #include "Camera/CameraComponent.h"
 #include "Engine/World.h"
 #include "Animation/AnimInstance.h"
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraComponent.h"
+#include "Kismet/GameplayStatics.h"
+#include "Camera/CameraShakeBase.h"
 
 #define TAGS FHorrorGameplayTags::Get()
 
@@ -51,24 +55,57 @@ void UGA_FireGun::ActivateAbility(
 
 	ConsumeGunAmmo(1);
 
-		// 播放开枪蒙太奇
-		if (FireMontage)
+	if (FireMontage)
+	{
+		if (UAnimInstance* AnimInstance = ActorInfo->GetAnimInstance())
 		{
-			if (UAnimInstance* AnimInstance = ActorInfo->GetAnimInstance())
-			{
-				AnimInstance->Montage_Play(FireMontage);
-			}
+			AnimInstance->Montage_Play(FireMontage);
 		}
+	}
+
+	FVector MuzzleLocation = Camera->GetComponentLocation();
+	APlayerCharacterB* Character = GetPlayerCharacter();
+	if (Character && Character->GunMeshComponent)
+	{
+		MuzzleLocation = Character->GunMeshComponent->GetSocketLocation(MuzzleSocketName);
+	}
 
 	const FVector Start = Camera->GetComponentLocation();
 	const FVector End = Start + Camera->GetForwardVector() * FireRange;
 
 	FHitResult Hit;
 	FCollisionQueryParams Params;
-	Params.AddIgnoredActor(Cast<AActor>(GetPlayerCharacter()));
+	Params.AddIgnoredActor(Cast<AActor>(Character));
 
-	if (GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params))
+	const bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params);
+	const FVector ImpactPoint = bHit ? Hit.ImpactPoint : End;
+
+	if (MuzzleFlashEffect)
 	{
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+			GetWorld(), MuzzleFlashEffect, MuzzleLocation,
+			Camera->GetComponentRotation());
+	}
+
+	if (TrailEffect)
+	{
+		UNiagaraComponent* TrailComp = UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+			GetWorld(), TrailEffect, MuzzleLocation);
+		if (TrailComp)
+		{
+			TrailComp->SetVectorParameter(TEXT("BeamEnd"), ImpactPoint);
+			TrailComp->SetFloatParameter(TEXT("BeamLifeTime"), TrailDuration);
+		}
+	}
+	if (bHit)
+	{
+		if (ImpactEffect)
+		{
+			UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+				GetWorld(), ImpactEffect, ImpactPoint,
+				Hit.ImpactNormal.Rotation());
+		}
+
 		if (AActor* HitActor = Hit.GetActor())
 		{
 			if (UHorrorGameInstance* GI = Cast<UHorrorGameInstance>(GetWorld()->GetGameInstance()))
@@ -78,10 +115,22 @@ void UGA_FireGun::ActivateAbility(
 		}
 	}
 
+	if (FireSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(GetWorld(), FireSound, MuzzleLocation);
+	}
+
+	if (FireCameraShake && Character)
+	{
+		if (APlayerController* PC = Cast<APlayerController>(Character->GetController()))
+		{
+			PC->ClientStartCameraShake(FireCameraShake);
+		}
+	}
+
 	if (Attr->GetGunAmmo() <= 0.0f)
 	{
 		ASC->RemoveLooseGameplayTag(TAGS.Weapon_Gun);
-		// OnGunTagChanged 回调自动隐藏枪模型
 	}
 
 	EndAbility(Handle, ActorInfo, ActivationInfo, false, false);

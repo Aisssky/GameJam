@@ -58,6 +58,10 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Movement")
 	bool IsMovementEnabled() const { return MovementLockCount == 0; }
 
+	// 左手IK目标：GunMesh上LeftHandIK Socket → 角色Mesh Component Space
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	bool GetLeftHandIKTarget(FVector& OutLocation, FRotator& OutRotation) const;
+
 	UFUNCTION(BlueprintCallable, Category = "Movement")
 	void ApplyFatigueEffect(float SoulFragmentationLevel);
 

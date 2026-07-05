@@ -5,6 +5,7 @@
 #include "../Console/ConsoleComponent.h"
 #include "PauseMenuWidget.h"
 #include "DialogueLineWidget.h"
+#include "DialogueData.h"
 #include "TaskPromptWidget.h"
 #include "Blueprint/UserWidget.h"
 #include "Components/Button.h"
@@ -360,6 +361,24 @@ void UHorrorUIComponent::ShowDialogueLine(const FText& Text, float Duration, boo
 	}
 }
 
+void UHorrorUIComponent::ShowDialogueByID(FName RowID)
+{
+	if (!DialogueDataTable)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[HorrorUIComponent] ShowDialogueByID: DialogueDataTable is null"));
+		return;
+	}
+
+	const FDialogueRow* Row = DialogueDataTable->FindRow<FDialogueRow>(RowID, TEXT("ShowDialogueByID"));
+	if (!Row)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[HorrorUIComponent] ShowDialogueByID: Row '%s' not found"), *RowID.ToString());
+		return;
+	}
+
+	ShowDialogueLine(Row->Text, Row->Duration, Row->bLargeFont);
+}
+
 void UHorrorUIComponent::ClearDialogueLine()
 {
 	if (UDialogueLineWidget* DLW = Cast<UDialogueLineWidget>(DialogueLineInstance))
@@ -387,6 +406,24 @@ void UHorrorUIComponent::ShowTaskPrompt(const FText& TaskText, float Duration)
 	{
 		TPW->ShowTask(TaskText, Duration);
 	}
+}
+
+void UHorrorUIComponent::ShowTaskPromptByID(FName RowID)
+{
+	if (!TaskPromptDataTable)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[HorrorUIComponent] ShowTaskPromptByID: TaskPromptDataTable is null"));
+		return;
+	}
+
+	const FTaskPromptRow* Row = TaskPromptDataTable->FindRow<FTaskPromptRow>(RowID, TEXT("ShowTaskPromptByID"));
+	if (!Row)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[HorrorUIComponent] ShowTaskPromptByID: Row '%s' not found"), *RowID.ToString());
+		return;
+	}
+
+	ShowTaskPrompt(Row->Text, Row->Duration);
 }
 
 void UHorrorUIComponent::ClearTaskPrompt()

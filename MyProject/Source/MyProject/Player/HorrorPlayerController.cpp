@@ -434,6 +434,14 @@ void AHorrorPlayerController::ShowDialogue(const FText& Text, float Duration, bo
 	}
 }
 
+void AHorrorPlayerController::ShowDialogueByID(FName RowID)
+{
+	if (UIComponent)
+	{
+		UIComponent->ShowDialogueByID(RowID);
+	}
+}
+
 void AHorrorPlayerController::ClearDialogue()
 {
 	if (UIComponent)
@@ -447,6 +455,14 @@ void AHorrorPlayerController::ShowTaskPrompt(const FText& TaskText, float Durati
 	if (UIComponent)
 	{
 		UIComponent->ShowTaskPrompt(TaskText, Duration);
+	}
+}
+
+void AHorrorPlayerController::ShowTaskPromptByID(FName RowID)
+{
+	if (UIComponent)
+	{
+		UIComponent->ShowTaskPromptByID(RowID);
 	}
 }
 

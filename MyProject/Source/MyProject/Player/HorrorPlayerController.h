@@ -42,10 +42,16 @@ public:
 	void ShowDialogue(const FText& Text, float Duration = 4.0f, bool bLarge = false);
 
 	UFUNCTION(BlueprintCallable, Category = "Dialogue")
+	void ShowDialogueByID(FName RowID);
+
+	UFUNCTION(BlueprintCallable, Category = "Dialogue")
 	void ClearDialogue();
 
 	UFUNCTION(BlueprintCallable, Category = "Dialogue")
 	void ShowTaskPrompt(const FText& TaskText, float Duration = 0.0f);
+
+	UFUNCTION(BlueprintCallable, Category = "Dialogue")
+	void ShowTaskPromptByID(FName RowID);
 
 	UFUNCTION(BlueprintCallable, Category = "Dialogue")
 	void ClearTaskPrompt();

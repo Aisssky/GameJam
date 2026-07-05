@@ -187,3 +187,20 @@ void APlayerCharacterB::ApplyFatigueEffect(float SoulFragmentationLevel)
 		SetSpeedMultiplier(1.0f);
 	}
 }
+
+bool APlayerCharacterB::GetLeftHandIKTarget(FVector& OutLocation, FRotator& OutRotation) const
+{
+	if (!GunMeshComponent || !GunMeshComponent->IsVisible())
+		return false;
+
+	// World Space 获取 LeftHandIK Socket
+	const FTransform SocketWorld = GunMeshComponent->GetSocketTransform(TEXT("LeftHandIK"), ERelativeTransformSpace::RTS_World);
+
+	// 转为角色 Mesh 的 Component Space
+	const FTransform MeshWorld = GetMesh()->GetComponentTransform();
+	const FTransform Relative = SocketWorld.GetRelativeTransform(MeshWorld);
+
+	OutLocation = Relative.GetLocation();
+	OutRotation = Relative.Rotator();
+	return true;
+}

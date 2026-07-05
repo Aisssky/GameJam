@@ -64,14 +64,26 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "UI|Pause Menu")
 	void ShowPauseMenuSaveFailedMessage(const FText& Reason);
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI|Dialogue")
+	TObjectPtr<UDataTable> DialogueDataTable;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI|Task")
+	TObjectPtr<UDataTable> TaskPromptDataTable;
+
 	UFUNCTION(BlueprintCallable, Category = "UI|Dialogue")
 	void ShowDialogueLine(const FText& Text, float Duration = 4.0f, bool bLarge = false);
+
+	UFUNCTION(BlueprintCallable, Category = "UI|Dialogue")
+	void ShowDialogueByID(FName RowID);
 
 	UFUNCTION(BlueprintCallable, Category = "UI|Dialogue")
 	void ClearDialogueLine();
 
 	UFUNCTION(BlueprintCallable, Category = "UI|Task")
 	void ShowTaskPrompt(const FText& TaskText, float Duration = 0.0f);
+
+	UFUNCTION(BlueprintCallable, Category = "UI|Task")
+	void ShowTaskPromptByID(FName RowID);
 
 	UFUNCTION(BlueprintCallable, Category = "UI|Task")
 	void ClearTaskPrompt();
