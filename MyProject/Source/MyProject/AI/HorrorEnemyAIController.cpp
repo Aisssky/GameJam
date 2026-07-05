@@ -10,6 +10,7 @@
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISenseConfig_Hearing.h"
 #include "Perception/AISenseConfig_Sight.h"
+#include "UObject/ConstructorHelpers.h"
 
 AHorrorEnemyAIController::AHorrorEnemyAIController()
 {
@@ -23,6 +24,21 @@ AHorrorEnemyAIController::AHorrorEnemyAIController()
 
 	BrainComponent = BehaviorTreeComponent;
 	SetPerceptionComponent(*AIPerceptionComponent);
+
+	static ConstructorHelpers::FObjectFinder<UBehaviorTree> DefaultBehaviorTreeAsset(
+		TEXT("/Game/Blueprints/Enemy/BT_Enemy.BT_Enemy"));
+	if (DefaultBehaviorTreeAsset.Succeeded())
+	{
+		BehaviorTreeAsset = DefaultBehaviorTreeAsset.Object;
+	}
+
+	static ConstructorHelpers::FObjectFinder<UBlackboardData> DefaultBlackboardAsset(
+		TEXT("/Game/Blueprints/Enemy/BB_Enemy.BB_Enemy"));
+	if (DefaultBlackboardAsset.Succeeded())
+	{
+		BlackboardAsset = DefaultBlackboardAsset.Object;
+	}
+
 	ConfigurePerception();
 	SetActorTickInterval(NormalTickInterval);
 }
