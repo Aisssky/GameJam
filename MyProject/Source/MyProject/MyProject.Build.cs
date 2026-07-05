@@ -19,7 +19,6 @@ public class MyProject : ModuleRules
 			"GameplayAbilities",
 			"GameplayTags",
 			"GameplayTasks",
-			"Niagara",
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[]

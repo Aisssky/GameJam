@@ -19,7 +19,7 @@ APlayerCharacterB::APlayerCharacterB()
 	AbilitySystemComponent = CreateDefaultSubobject<UHorrorAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
 	GunMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("GunMesh"));
 	GunMeshComponent->SetupAttachment(GetMesh(), TEXT("hand_r"));
-	GunMeshComponent->SetVisibility(false);  // 编辑器可见，游戏里默认隐藏
+	GunMeshComponent->SetHiddenInGame(true);
 
 	bUseControllerRotationYaw = true;
 

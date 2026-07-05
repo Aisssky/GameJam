@@ -31,9 +31,11 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Talisman")
 	int32 InitialTalismanCount = 3;
 
-	// 指向角色 BP 上预先放好的枪模型，挂在 hand_r 骨骼，默认 Hidden
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Weapon|Gun")
 	TObjectPtr<UMeshComponent> GunMesh;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|Gun|Sound")
+	TObjectPtr<class USoundBase> GunEquipSound;
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	void ShowGun();

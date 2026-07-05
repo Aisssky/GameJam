@@ -26,23 +26,14 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Gun|Effects")
 	FName MuzzleSocketName = TEXT("Muzzle");
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Gun|Effects")
-	TObjectPtr<class UNiagaraSystem> MuzzleFlashEffect;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Gun|Projectile")
+	TSubclassOf<class AActor> ProjectileClass;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Gun|Effects")
-	TObjectPtr<class UNiagaraSystem> ImpactEffect;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Gun|Projectile")
+	float MuzzleVelocity = 10000.0f;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Gun|Effects")
-	TObjectPtr<class UNiagaraSystem> TrailEffect;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Gun|Effects")
-	float TrailDuration = 0.1f;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Gun|Effects")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Gun|Sound")
 	TObjectPtr<class USoundBase> FireSound;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Gun|Effects")
-	TSubclassOf<class UCameraShakeBase> FireCameraShake;
 
 	virtual void ActivateAbility(
 		const FGameplayAbilitySpecHandle Handle,

@@ -9,6 +9,7 @@
 #include "InputActionValue.h"
 #include "GameplayTagContainer.h"
 #include "Engine/World.h"
+#include "Kismet/GameplayStatics.h"
 
 #define TAGS FHorrorGameplayTags::Get()
 
@@ -55,7 +56,7 @@ void UHorrorAbilitySystemComponent::BeginPlay()
 
 	if (GunMesh)
 	{
-		GunMesh->SetVisibility(false);
+		GunMesh->SetHiddenInGame(true);
 	}
 
 	GunTagChangedHandle = RegisterGameplayTagEvent(TAGS.Weapon_Gun)
@@ -64,9 +65,16 @@ void UHorrorAbilitySystemComponent::BeginPlay()
 
 void UHorrorAbilitySystemComponent::OnGunTagChanged(const FGameplayTag Tag, int32 NewCount)
 {
+	const bool bShow = NewCount > 0;
+
 	if (GunMesh)
 	{
-		GunMesh->SetVisibility(NewCount > 0);
+		GunMesh->SetHiddenInGame(!bShow);
+	}
+
+	if (bShow && GunEquipSound && OwnerCharacter)
+	{
+		UGameplayStatics::PlaySoundAtLocation(GetWorld(), GunEquipSound, OwnerCharacter->GetActorLocation());
 	}
 }
 
